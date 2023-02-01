@@ -33,11 +33,14 @@ data_product_dir = "/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns/Grou
 # Symphony suite, and "ct_rhapsody", the version used by rhapsody.
 tree_style = "ct_rvmax"
 
-fmt_string = "%%d %%d %s %s %d %s %s %s %s" % (eps, mp, num_snapshot_files, 
-                                               snapshot_format, tree_dir,
-                                               data_product_dir, tree_style)
+um_fmt = "/sdf/group/kipac/u/ycwang/MWmass_new/Halo%03d/output/rockstar/groupcat/sfr_catalog_%.6f.txt"
+
+fmt_string = ("%%d %%d %s %s %d %s %s %s %s %s %s" %
+              (eps, mp, num_snapshot_files,
+               snapshot_format, tree_dir,
+               data_product_dir, tree_style, um_fmt))
 
 for i in range(len(haloes)):
     h = haloes[i]
     #print(fmt_string)
-    print(fmt_string % (halo_ids[i], halo_snaps[i], h, h, h))
+    print(fmt_string % (halo_ids[i], halo_snaps[i], h, h, h, h))
