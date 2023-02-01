@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --array=0-4
+#SBATCH --array=4
 #SBATCH --time=48:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
