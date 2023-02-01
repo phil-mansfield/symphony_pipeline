@@ -13,6 +13,12 @@ invalid_hosts = []
 
 USE_TEX = True
 
+SHMF_LIM = 14.2
+SHMF_LIM_NAME = "14.2"
+
+RAD_LIM =1e6
+RAD_LIM_NAME = None
+
 SUITE = "SymphonyMilkyWay"
 OUT_DIR = "../plots/core_tracking"
 BASE_DIR = "/sdf/home/p/phil1/ZoomIns"
@@ -261,6 +267,8 @@ def mass_function():
                 r = np.sqrt(np.sum(x[:,-1,:]**2, axis=1)) / h["rvir"][0,-1]
 
                 ok[0,-1] = False
+                
+                ok[:,-1] = ok[:,-1] & (hist["mpeak_pre"]/mvir[:,-1] < SHMF_LIM)
 
                 ratios.append(ratio[ok[:,-1]])
                 rads.append(r[ok[:,-1]])
@@ -313,7 +321,7 @@ def mass_function():
 
                 rat_eval = np.linspace(-5, -1, 200)
 
-                n_min = 5
+                n_min = 10
                 n_num = funcs[i_mult][0](rat_eval)
                 n_den = funcs[i_mult][1](rat_eval)
                 ok = (n_num > n_min) & (n_den > n_min)
@@ -340,20 +348,27 @@ def mass_function():
         ax.set_yscale("log")
         ax.set_xlim(1e-5, 0.2)
         ax.set_ylim(1e-1, 2e3)
+
         rat.set_xlabel(r"$\mu=m_{\rm peak,sub}/M_{\rm host}$")
         if i_fig == 0 or i_fig == 1:
             rat.set_ylabel(r"$N_{\rm pt}/N_{\rm Rockstar}$")
         else:
             rat.set_ylabel(r"$N_{\rm HR}/N_{\rm fid}$")
         ax.set_ylabel(r"$N(>\mu)$")
-        if i_fig == 1:
+        if i_fig == 1 and SHMF_LIM_NAME is None:
             rat.set_ylim(0.6, 4)
+        elif i_fig == 2 and SHMF_LIM_NAME is not None:
+            rat.set_ylim(0.9, 1.4)
         if i_fig > 0: 
             rat.set_xlim(1e-5, 4e-2)
 
         ax.legend(loc="lower left", fontsize=17)
     
-        fig.savefig(path.join(OUT_DIR, "core_shmf_%s.pdf" % suffix))
+        if SHMF_LIM_NAME is None:
+            fig.savefig(path.join(OUT_DIR, "core_shmf_%s.pdf" % suffix))
+        else:
+            fig.savefig(path.join(OUT_DIR, "core_shmf_%s_%s.pdf" %
+                                  (suffix, SHMF_LIM_NAME)))
 
 def mass_function_resolution():
     print("mass_function_resolution")
@@ -859,21 +874,33 @@ def radius_cdf():
                                       gridspec_kw=gs_kw)
     ax_hr, rat_hr = axs_hr[0], axs_hr[1]
 
+    """
+    fig_main, ax_main = plt.subplots()
+    fig_c, ax_c = plt.subplots()
+    fig_rs, ax_rs = plt.subplots()
+    fig_hr, ax_hr = plt.subplots()
+    """
+
     figs = [fig_main, fig_hr, fig_c, fig_rs]
     axes = [ax_main, ax_hr, ax_c, ax_rs]
     rats = [rat_main, rat_hr, rat_c, rat_rs]
 
-    npeak_cuts = [(10**2.5, 10**3), (10**3.5, 10**4), (10**4.5, 10**5)]
-    #npeak_cuts = [0.3e3, 3e3, 30e3]
+    for rat in rats:
+        plt.plot([0, 1], [1, 1], "--", lw=1.5, c="k")
+
+    #npeak_cuts = [(10**2.5, 10**3), (10**3.5, 10**4), (10**4.5, 10**5)]
+    npeak_cuts = [(10**2.5, 10**3), (10**3, 10**3.5), (10**3.5, 10**4),
+                  (10**4, 10**4.5)][::-1]
     cut_labels = [
-        r"$10^{2.5} < N_{\rm peak} < 10^3$",
-        r"$10^{3.5} < N_{\rm peak} < 10^4$",
-        r"$10^{4.5} < N_{\rm peak} < 10^5$",
-        #r"$N_{\rm peak} > 3\times 10^2$",
-        #r"$N_{\rm peak} > 3\times 10^3$",
-        #r"$N_{\rm peak} > 3\times 10^4$",
-    ]
-    cut_colors = [pc("r"), pc("o"), pc("b")]
+        #r"$10^{2.5} < N_{\rm peak} < 10^3$",
+        #r"$10^{3.5} < N_{\rm peak} < 10^4$",
+        #r"$10^{4.5} < N_{\rm peak} < 10^5$",
+        r"$10^{2.5} < n_{\rm sub,peak} < 10^{3}$",
+        r"$10^{3} < n_{\rm sub,peak} < 10^{3.5}$",
+        r"$10^{3.5} < n_{\rm sub,peak} < 10^{4}$",
+        r"$10^{4} < n_{\rm sub,peak} < 10^{4.5}$",
+    ][::-1]
+    cut_colors = [pc("r"), pc("o"), pc("b"), pc("p")][::-1]
 
     suites = ["SymphonyMilkyWay", "SymphonyMilkyWayHR", "SymphonyMilkyWayLR"]
     
@@ -884,6 +911,7 @@ def radius_cdf():
                   [r"${\rm Particle{-}tracking}$", r"${\rm Rockstar}$"],
                   [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"], 
                   [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"]]
+
 
     for i_suite in range(len(suites)):
         suite = suites[i_suite]
@@ -896,7 +924,8 @@ def radius_cdf():
         for halo_type in range(2):
             npeaks = []
             rads = []
-            
+            r50s = []
+
             n_host = 0
             
             for i_host in range(symlib.n_hosts(suite)):
@@ -923,16 +952,19 @@ def radius_cdf():
                 npeak = hist["mpeak_pre"]/mp
 
                 ok[0,-1] = False
+                ok[:,-1] = ok[:,-1] & (hist["mpeak_pre"]/mvir[:,-1] < RAD_LIM)
 
                 npeaks.append(npeak[ok[:,-1]])
                 rads.append(r[ok[:,-1]])
+                r50s.append(c["r50_bound"][ok[:,-1],-1]/h["rvir"][0,-1])
                 n_host += 1
 
             r = np.hstack(rads)
             npeak = np.hstack(npeaks)
+            r50 = np.hstack(r50s)
 
             for i_fig in range(len(figs)):
-                fig, ax = figs[i_fig], axes[i_fig]
+                fig, ax, rat = figs[i_fig], axes[i_fig], rats[i_fig]
                 suites_to_plot = fig_suites[i_fig]
                 types_to_plot = fig_types[i_fig]
 
@@ -941,47 +973,66 @@ def radius_cdf():
                     if types_to_plot[i_curve] != halo_type: continue
 
                     for i_mult in range(len(npeak_cuts)):
-                        ok = (npeak > npeak_cuts[i_mult][0]) & (r < 1) & (npeak< npeak_cuts[i_mult][1])
+                        ok = (npeak > npeak_cuts[i_mult][0]) & (r < 1) & (npeak< npeak_cuts[i_mult][1]) & (r > 0)
+
+                        size_ok = r[ok] > np.quantile(r50[ok], 0.9)
+                        print(npeak_cuts[i_mult][0])
+                        print(np.quantile(r50[ok], 0.9))
+                        print(np.sum(size_ok), np.sum(ok))
 
                         ls = "-" if i_curve == 0 else "--"
                         color = cut_colors[i_mult]
 
-                        ax.plot(np.sort(r[ok]),
-                                np.arange(np.sum(ok))/np.sum(ok),
+                        ax.plot(np.sort(r[ok])[size_ok],
+                                (np.arange(np.sum(ok))/np.sum(ok))[size_ok],
                                 ls=ls, c=color)
+                        _, mass = particle_mass_profile(np.sort(r[ok]))
+                        rat.plot(np.sort(r[ok])[size_ok],
+                                 (np.arange(np.sum(ok))/np.sum(ok)/mass)[size_ok],
+                                 ls=ls, c=color)
 
     for i_fig in range(len(figs)):
         fig, ax, rat = figs[i_fig], axes[i_fig], rats[i_fig]
+        #fig, ax = figs[i_fig], axes[i_fig]
         suffix = fig_suffix[i_fig]
 
+        curves = [None]*len(npeak_cuts)
         for i_rad in range(len(npeak_cuts)):
-            ax.plot([], [], label=cut_labels[i_rad],
-                    c=cut_colors[i_rad])
-
-        ax.plot([], [], "-", c=pc("a"), label=fig_labels[i_fig][0])
-        ax.plot([], [], "--", c=pc("a"), label=fig_labels[i_fig][1])
+            curves[i_rad], = ax.plot([], [], label=cut_labels[i_rad],
+                                   c=cut_colors[i_rad])
+        if RAD_LIM_NAME is None:
+            alt_legend = ax.legend(curves, cut_labels,
+                                   loc="upper left", fontsize=17)
         
+
+        rat.plot([0, 1], [1, 1], "--", lw=1.5, c="k")
+        l1, = ax.plot([], [], "-", c=pc("a"), label=fig_labels[i_fig][0])
+        l2, = ax.plot([], [], "--", c=pc("a"), label=fig_labels[i_fig][1])
         r_part, m_part = particle_mass_profile()
-
-        ax.plot(r_part, m_part, ":", c="k",
-                label=r"$M(<r/R_{\rm vir})/M_{\rm vir}$")
-
-
+        l3, = ax.plot(r_part, m_part, ":", c="k",
+                      label=r"$M(<r/R_{\rm vir})/M_{\rm vir}$")
+        if RAD_LIM_NAME is None:
+            legend = ax.legend([l1, l2, l3], [fig_labels[i_fig][0], fig_labels[i_fig][1], r"$M(<r/R_{\rm vir})/M_{\rm vir}$"],
+                               loc="lower right", fontsize=17)
+            ax.add_artist(alt_legend)
         ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        rat.set_xlabel(r"$r/R_{\rm vir}$")
-        ax.set_ylabel(r"$N(<r/R_{\rm vir})$")
-
-        ax.legend(loc="upper left", fontsize=17)
+        ax.set_ylim(0, 1.1)
+        ax.set_xlabel(r"$r/R_{\rm vir}$")
+        ax.set_ylabel(r"${\rm CDF}(<r/R_{\rm vir})$")
     
-        fig.savefig(path.join(OUT_DIR, "radius_cdf_%s.pdf" % suffix))
+        if RAD_LIM_NAME is None:
+            fig.savefig(path.join(OUT_DIR, "radius_cdf_%s.pdf" % suffix))
+        else:
+            fig.savefig(path.join(OUT_DIR, "radius_cdf_%s_%s.pdf" %
+                                  (suffix, RAD_LIM_NAME)))
 
-def particle_mass_profile():
+def particle_mass_profile(r_vals=None):
     r_hi, scaled_rho = np.loadtxt("tables/SymphonyMilkyWay_density_profile.txt").T
     rho = scaled_rho/r_hi**2
     
     r_edge = np.zeros(len(r_hi)+1)
     r_edge[1:] = r_hi
+    r_edge[r_edge == 0] = 1e-6
     vol = r_edge[1:]**3 - r_edge[:-1]**3
     mass = np.zeros(len(r_edge))
     mass[1:] = vol*rho
@@ -990,10 +1041,10 @@ def particle_mass_profile():
     f_mass = interpolate.interp1d(np.log10(r_edge), mass)
     m_vir = f_mass(0)
 
-    #print(r_edge)
-    #print(mass/m_vir)
-
-    return r_edge, mass / m_vir
+    if r_vals is None:
+        return r_edge, mass / m_vir
+    else:
+        return r_vals, f_mass(np.log10(r_vals)) / m_vir
 
 def mass_loss():
     print("mass_loss")
