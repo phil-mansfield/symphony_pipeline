@@ -10,8 +10,9 @@
 #SBATCH -p kipac
 
 config=configs/MilkyWay/config.txt
-suffix=k64_n30
+suffix=cons_test
 snap_range=235:235
+SLURM_ARRAY_TASK_ID=0
 
 #python3 find_infall_cores.py ${config} ${SLURM_ARRAY_TASK_ID} &&
 python3 print_core_catalogue.py ${config} ${SLURM_ARRAY_TASK_ID} --reset --suffix=${suffix} --snap_range=${snap_range} &&

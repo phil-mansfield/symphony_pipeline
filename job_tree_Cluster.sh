@@ -4,9 +4,10 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH -J Cluster_make_trees
-#SBATCH --output=logs/log.MilkyWay.%j.oe
+#SBATCH --output=logs/log.Cluster_tree.%j.oe
 #SBATCH --mem-per-cpu=32G
 
 config=configs/Cluster/config.txt
 index=-1
 go run write_binary_tree.go ${config} ${index} && go run write_tree_header.go ${config} ${index} && go run write_subhalos_file.go ${config} ${index}
+
