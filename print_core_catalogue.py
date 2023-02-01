@@ -10,9 +10,20 @@ import subfind
 import os
 import sys
 import gravitree
+import subprocess
 
 SUBFIND_K = 16
 VOTING_NP = 32
+
+# From github here: https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
+def get_git_revision_hash():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+def print_header(sim_dir, file=None):
+    print("# sim_dir = %s" % sim_dir)
+    print("# git hash = %s" % get_git_revision_hash(), file=file)
+    print("# k = %d" % SUBFIND_K, file=file)
+    print("# n = %d" % VOTING_NP, file=file)
 
 def get_sim_dirs(config_name):
     with open(config_name, "r") as fp: text = fp.read()
@@ -24,7 +35,6 @@ def get_sim_dirs(config_name):
 def parse_sim_dir(sim_dir):
     suite_dir, halo = path.split(sim_dir)
     base_dir, suite = path.split(suite_dir)
-    print(sim_dir, base_dir, suite, halo)
     return base_dir, suite, halo
 
 def get_matching_file_names(file_fmt):
@@ -81,6 +91,8 @@ def print_halo(config_name, target_idx, flags):
     sim_dir = sim_dirs[target_idx]
     if sim_dir[-1] == "/": sim_dir = sim_dir[:-1]
 
+    print_header(sim_dir)
+
     if "suffix" in flags:
         out_file_fmt = path.join(sim_dir, "halos", "core_%s.%%d.txt" %
                                  flags["suffix"])
@@ -120,6 +132,7 @@ def print_halo(config_name, target_idx, flags):
     infall_cores = [None]*len(h)
 
     with open(out_file, "a") as fp:
+        print_header(sim_dir, file=fp)
         print("""# 0 - snap
 # 1 - subhalo index
 # 2-4 - x (pkpc)
@@ -151,6 +164,10 @@ def print_halo(config_name, target_idx, flags):
         
         for j in range(len(targets)):
             i_sub = targets[j]
+            if i_sub < 10:
+                print("SKIPPING HALO", i_sub)
+                continue
+
             if snap < starting_snap[i_sub]: continue
             if hist["false_selection"][i_sub]: continue
             if -1 in sd.infall_cores[i_sub]: continue
@@ -210,6 +227,7 @@ def print_halo(config_name, target_idx, flags):
             f_core_32 = np.sum(r_core < r_50_bound)/32
             f_core_32_rs = np.sum(r_h < r_50_bound_h)/32
 
+            print(r_core[0])
             with open(out_file, "a") as fp:
                 print(("%d %d "+"%.6f "*3+"%.6f "*3+"%.6f "*3+"%.6g "*3+"%.6g "+"%.6f "+"%.6f "+"%6.f") %
                       (snap, i_sub, xc[0], xc[1], xc[2], vc[0], vc[1], vc[2],
