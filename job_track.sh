@@ -10,7 +10,7 @@
 #SBATCH -p kipac
 
 config=configs/MilkyWay/config.txt
-suffix=cons_test
+suffix=commit_3
 snap_range=235:235
 SLURM_ARRAY_TASK_ID=0
 

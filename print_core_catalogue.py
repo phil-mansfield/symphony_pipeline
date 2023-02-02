@@ -164,9 +164,6 @@ def print_halo(config_name, target_idx, flags):
         
         for j in range(len(targets)):
             i_sub = targets[j]
-            if i_sub < 10:
-                print("SKIPPING HALO", i_sub)
-                continue
 
             if snap < starting_snap[i_sub]: continue
             if hist["false_selection"][i_sub]: continue
