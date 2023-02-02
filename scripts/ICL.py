@@ -174,7 +174,7 @@ def main():
         # Set to whatever halos you want to analyze. I'd suggest starting with
         # a couple small ones for debugging and then changing it back to
         # everything later. Don't include halo 0.
-        c = symlib.read_cores(sim_dir)
+        #c = symlib.read_cores(sim_dir)
         #print('length of cores', len(c))
         #print('length of halos', len(h))
         target_subs = np.arange(1, len(h))
@@ -355,5 +355,34 @@ def main():
     ax.set_ylim(1e4, None)
 
     fig.savefig(plot_dir+"star_contribution_cdf_%s.png" % suite)
+
+    # testing out another plot
+    param = symlib.simulation_parameters(sim_dir)
+    scale = symlib.scale_factors(sim_dir)
+    # Subhalos
+    h, _ = symlib.read_subhalos(sim_dir)
+    # Subhalos in comoving units
+    h_cmov, _ = symlib.read_subhalos(sim_dir, comoving=True)
+    last_snap = param["n_snap"] - 1
+
+    for i in target_subs:
+        # Only work with particles where this flag is true.
+        ok = symlib.read_particles(part_info, sim_dir, last_snap,
+                                   "valid", owner=i)
+        v = symlib.read_particles(part_info, sim_dir, last_snap, "v", owner=i)
+        x = symlib.read_particles(part_info, sim_dir, last_snap, "x", owner=i)
+
+        # Correct the units. There's an analogous function for velocities.
+        v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)
+        x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
+        if i < 3:
+            print('v',v_i)
+            print('x',x_i)
+
+        r_host = np.sqrt(np.sum(x_i**2, axis=1))
+        rf[i] = np.ones(len(ok))*-1
+        rf[i][ok] = r_host[ok]
+
+
 
 if __name__ == "__main__": main()
