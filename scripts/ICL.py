@@ -376,13 +376,17 @@ def main():
         v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)
         x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
 
-        r_hat = x_i / np.linalg.norm(x_i, axis = 0)
-        v_r = np.dot(v_i,r_hat)*r_hat
+        r_hat = x_i / np.linalg.norm(x_i, axis = 1)
         if i < 3:
             print('v',v_i)
             print('x',x_i)
-            print('v_r',v_r)
-            print(np.shape(r_hat), np.shape(v_r))
+
+            print(np.shape(r_hat))
+
+        v_r = np.dot(v_i,r_hat)*r_hat
+
+        if i < 3:
+            oring('v_r', v_r)
 
 
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
