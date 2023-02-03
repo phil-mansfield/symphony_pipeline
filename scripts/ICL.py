@@ -403,12 +403,18 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         #rf[i] = np.ones(len(ok))*-1
         #rf[i][ok] = r_host[ok]
-        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins*.01,v_bins])
+        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
         VR_hist += VR
         if i < 3:
             print(xedges, yedges)
             print('rhost',r_host[ok])
             print('VR',VR)
+            print('median',
+                np.median(v_i, axis = 0),
+                np.median(x_i, axis = 0),
+                np.sqrt(np.mean(v_i**2, axis = 0)),
+                np.sqrt(np.mean(x_i**2, axis = 0))
+            )
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
     print(VR_hist)
