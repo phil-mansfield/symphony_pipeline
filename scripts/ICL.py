@@ -407,7 +407,7 @@ def main():
         VR_hist += VR[0]
     fig, ax = plt.subplots()
     ax.imshow(VR_hist)
-    fig.savefig(plot_dir+"phase_space" % suite)
+    fig.savefig(plot_dir+"phasespace" % suite)
 
 
 if __name__ == "__main__": main()
