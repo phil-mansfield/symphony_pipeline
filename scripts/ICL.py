@@ -405,7 +405,7 @@ def main():
         VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
         VR_hist += VR[0]
     fig, ax = plt.subplots()
-    ax.imshow(VR_hist, extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
+    ax.imshow(VR_hist, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
     #ax.colorbar()
     fig.savefig(plot_dir+"phasespace.png")
 
