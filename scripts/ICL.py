@@ -403,10 +403,11 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         rf[i] = np.ones(len(ok))*-1
         rf[i][ok] = r_host[ok]
-        VR = np.histogram2d(r_host[ok], v_r[ok], [50,50])
+        VR = np.histogram2d(r_host[ok], v_r[ok], [50,50], vmin = .0001)
         VR_hist += VR[0]
     fig, ax = plt.subplots()
     ax.imshow(VR_hist)
+    ax.colorbar()
     fig.savefig(plot_dir+"phasespace.png")
 
 
