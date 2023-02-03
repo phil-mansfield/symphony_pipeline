@@ -377,15 +377,15 @@ def main():
         # Only work with particles where this flag is true.
         ok = symlib.read_particles(part_info, sim_dir, last_snap,
                                    "valid", owner=i)
-        ok = (mp_star[i] > 0)
+        #ok = (mp_star[i] > 0)
 
 
         v = symlib.read_particles(part_info, sim_dir, last_snap, "v", owner=i)
         x = symlib.read_particles(part_info, sim_dir, last_snap, "x", owner=i)
 
         # Correct the units. There's an analogous function for velocities.
-        v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)
-        x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
+        v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)[ok]
+        x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)[ok]
 
         norm = np.linalg.norm(x_i, axis = 1)
         r_hat = np.copy(x_i)
