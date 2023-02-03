@@ -403,7 +403,7 @@ def main():
         #rf[i] = np.ones(len(ok))*-1
         #rf[i][ok] = r_host[ok]
         VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
-        VR_hist += VR[0]
+        VR_hist += VR
         if i < 3:
             print(xedges, yedges)
     fig, ax = plt.subplots()
