@@ -420,6 +420,10 @@ def main():
             )
             print('R', R)
             print('V',V)
+            print('v_i', v_i[:5,:])
+            print('v_r', v_r[:5, :])
+            print('med v_r', np.median(v_r, axis = 0))
+
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
     print(VR_hist)
