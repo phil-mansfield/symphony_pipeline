@@ -368,8 +368,7 @@ def main():
 
     r_host_halo = h["rvir"][0,-1]
     r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
-
-    n_bins = len(r_bins) - 1
+    v_bins = np.linspace(-500,500,n_bins+1)
     VR_hist = np.zeros((n_bins, n_bins))
 
 
@@ -403,10 +402,10 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         rf[i] = np.ones(len(ok))*-1
         rf[i][ok] = r_host[ok]
-        VR = np.histogram2d(r_host[ok], v_r[ok], [50,50], vmin = .0001)
+        VR = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
         VR_hist += VR[0]
     fig, ax = plt.subplots()
-    ax.imshow(VR_hist)
+    ax.imshow(VR_hist, r_bins, v_bins)
     ax.colorbar()
     fig.savefig(plot_dir+"phasespace.png")
 
