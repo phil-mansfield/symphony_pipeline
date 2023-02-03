@@ -370,7 +370,7 @@ def main():
     r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
 
     n_bins = len(r_bins) - 1
-    VR_hist = np.zeros(n_bins)
+    VR_hist = np.zeros((n_bins, n_bins))
 
 
     for i in target_subs:
