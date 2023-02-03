@@ -387,7 +387,9 @@ def main():
         v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)
         x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
 
-        r_hat = x_i / np.linalg.norm(x_i, axis = 1)
+        norm = np.linalg.norm(x_i, axis = 1)
+        r_hat = np.copy(x_i)
+        for dim in range(3): r_hat[:,dim] /= norm
         #if i < 3:
             #print('v',v_i)
             #print('x',x_i)
