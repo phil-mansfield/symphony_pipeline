@@ -408,6 +408,7 @@ def main():
             print(xedges, yedges)
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
+    print(VR_hist)
 
     #ax.imshow(VR_hist, vmin=.0000001)#, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
     ax.pcolormesh(X,Y,VR_hist)
