@@ -404,11 +404,11 @@ def main():
         rf[i][ok] = r_host[ok]
         VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
         VR_hist += VR[0]
+        if i < 3:
+            print(xedges, yedges)
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
-    if i < 3:
-        
-        print(xedges, yedges)
+
     #ax.imshow(VR_hist, vmin=.0000001)#, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
     ax.pcolormesh(X,Y,VR_hist)
     #ax.colorbar()
