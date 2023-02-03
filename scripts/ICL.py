@@ -407,7 +407,7 @@ def main():
         VR_hist += VR
         if i < 3:
             print(xedges, yedges)
-            print('rhost',r_host)
+            print('rhost',r_host[ok])
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
     print(VR_hist)
