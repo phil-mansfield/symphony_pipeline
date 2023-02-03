@@ -403,11 +403,11 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         rf[i] = np.ones(len(ok))*-1
         rf[i][ok] = r_host[ok]
-        VR, _ = np.histogram2d(r_host[ok], v_r[ok], [50,50])
-        VR_hist += VR
-        fig, ax = plt.subplots()
-        ax.imshow(VR)
-        fig.savefig(plot_dir+"phase_space" % suite)
+        VR = np.histogram2d(r_host[ok], v_r[ok], [50,50])
+        VR_hist += VR[0]
+    fig, ax = plt.subplots()
+    ax.imshow(VR_hist)
+    fig.savefig(plot_dir+"phase_space" % suite)
 
 
 if __name__ == "__main__": main()
