@@ -418,6 +418,7 @@ def main():
                 np.sqrt(np.mean(v_i**2, axis = 0)),
                 np.sqrt(np.mean(x_i**2, axis = 0))
             )
+
             print('R', R)
             print('V',V)
             print('v_i', v_i[:5,:])
