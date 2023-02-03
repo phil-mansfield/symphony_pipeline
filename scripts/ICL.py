@@ -403,7 +403,7 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         #rf[i] = np.ones(len(ok))*-1
         #rf[i][ok] = r_host[ok]
-        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
+        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins*.01,v_bins])
         VR_hist += VR
         if i < 3:
             print(xedges, yedges)
@@ -415,7 +415,6 @@ def main():
 
     #ax.imshow(VR_hist, vmin=.0000001)#, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
     ax.pcolormesh(X,Y,VR_hist)
-    #ax.colorbar()
     fig.savefig(plot_dir+"phasespace.png")
 
 
