@@ -387,16 +387,16 @@ def main():
         x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
 
         r_hat = x_i / np.linalg.norm(x_i, axis = 0)
-        if i < 3:
-            print('v',v_i)
-            print('x',x_i)
+        #if i < 3:
+            #print('v',v_i)
+            #print('x',x_i)
 
-            print(np.shape(r_hat))
+            #print(np.shape(r_hat))
 
         v_r = np.sum(v_i*r_hat, axis = 1)#np.dot(v_i,r_hat)*r_hat
 
-        if i < 3:
-            print('v_r', v_r)
+        #if i < 3:
+            #print('v_r', v_r)
             #edit
 
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
@@ -406,6 +406,9 @@ def main():
         VR_hist += VR[0]
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
+    if i < 3:
+        
+        print(xedges, yedges)
     #ax.imshow(VR_hist, vmin=.0000001)#, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
     ax.pcolormesh(X,Y,VR_hist)
     #ax.colorbar()
