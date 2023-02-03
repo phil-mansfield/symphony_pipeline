@@ -398,7 +398,7 @@ def main():
 
         if i < 3:
             print('v_r', v_r)
-
+            #edit
 
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         rf[i] = np.ones(len(ok))*-1
