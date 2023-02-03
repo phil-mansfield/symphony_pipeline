@@ -422,7 +422,7 @@ def main():
             print('R', R)
             print('V',V)
             print('v_i', v_i[:5,:])
-            print('v_r', v_r[:5, :])
+            print('v_r', v_r[:5])
             print('med v_r', np.median(v_r, axis = 0))
             print('v_r_rms', np.std(v_r))
 
