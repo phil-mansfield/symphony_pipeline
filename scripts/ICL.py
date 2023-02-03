@@ -368,7 +368,7 @@ def main():
 
     r_host_halo = h["rvir"][0,-1]
     r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
-    v_bins = np.linspace(-500,500,n_bins+1)
+    v_bins = np.linspace(-5000,5000,n_bins+1)
     VR_hist = np.zeros((n_bins, n_bins))
 
 
@@ -400,8 +400,8 @@ def main():
             #edit
 
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
-        rf[i] = np.ones(len(ok))*-1
-        rf[i][ok] = r_host[ok]
+        #rf[i] = np.ones(len(ok))*-1
+        #rf[i][ok] = r_host[ok]
         VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
         VR_hist += VR[0]
         if i < 3:
