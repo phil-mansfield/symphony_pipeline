@@ -406,7 +406,7 @@ def main():
         VR_hist += VR[0]
     fig, ax = plt.subplots()
     ax.imshow(VR_hist, extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
-    ax.colorbar()
+    #ax.colorbar()
     fig.savefig(plot_dir+"phasespace.png")
 
 
