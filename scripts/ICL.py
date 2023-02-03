@@ -368,6 +368,7 @@ def main():
 
     r_host_halo = h["rvir"][0,-1]
     r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
+    print('rbins',r_bins)
     v_bins = np.linspace(-5000,5000,n_bins+1)
     VR_hist = np.zeros((n_bins, n_bins))
 
