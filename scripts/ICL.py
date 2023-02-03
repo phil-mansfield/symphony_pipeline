@@ -409,6 +409,7 @@ def main():
             print(xedges, yedges)
             print('rhost',r_host[ok])
             print('VR',VR)
+            print('v_r', v_r)
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
     print(VR_hist)
