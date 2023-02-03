@@ -357,6 +357,7 @@ def main():
     fig.savefig(plot_dir+"star_contribution_cdf_%s.png" % suite)
 
     # testing out another plot
+
     param = symlib.simulation_parameters(sim_dir)
     scale = symlib.scale_factors(sim_dir)
     # Subhalos
@@ -365,10 +366,20 @@ def main():
     h_cmov, _ = symlib.read_subhalos(sim_dir, comoving=True)
     last_snap = param["n_snap"] - 1
 
+    r_host_halo = h["rvir"][0,-1]
+    r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
+
+    n_bins = len(r_bins) - 1
+    VR_hist = np.zeros(n_bins)
+
+
     for i in target_subs:
         # Only work with particles where this flag is true.
         ok = symlib.read_particles(part_info, sim_dir, last_snap,
                                    "valid", owner=i)
+        ok = (mp_star[i] > 0)
+
+
         v = symlib.read_particles(part_info, sim_dir, last_snap, "v", owner=i)
         x = symlib.read_particles(part_info, sim_dir, last_snap, "x", owner=i)
 
@@ -392,7 +403,11 @@ def main():
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         rf[i] = np.ones(len(ok))*-1
         rf[i][ok] = r_host[ok]
-
+        VR, _ = np.histogram2d(r_host[ok], v_r[ok], [50,50])
+        VR_hist += VR
+        fig, ax = plt.subplots()
+        ax.imshow(VR)
+        fig.savefig(plot_dir+"phase_space" % suite)
 
 
 if __name__ == "__main__": main()
