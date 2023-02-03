@@ -387,7 +387,7 @@ def main():
         v_i = symlib.set_units_v(v, h_cmov[0,-1], scale[-1], param)
         x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
 
-        r_hat = x_i / np.linalg.norm(x_i, axis = 0)
+        r_hat = x_i / np.linalg.norm(x_i, axis = 1)
         #if i < 3:
             #print('v',v_i)
             #print('x',x_i)
@@ -425,6 +425,8 @@ def main():
             print('v_r', v_r[:5])
             print('med v_r', np.median(v_r, axis = 0))
             print('v_r_rms', np.std(v_r))
+            print('x_i', x_i[:5,:])
+            print('r_hat', r_hat[:5,:])
 
     fig, ax = plt.subplots()
     X, Y = np.meshgrid(xedges, yedges)
