@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import symlib
 
 FE_H_LOW = -1.5
@@ -359,6 +360,10 @@ def main():
     # testing out another plot
 
     param = symlib.simulation_parameters(sim_dir)
+    mp_h100 = param["mp"]
+    h100 = param["h100"]
+    mp = mp_h100/h100
+
     scale = symlib.scale_factors(sim_dir)
     # Subhalos
     h, _ = symlib.read_subhalos(sim_dir)
@@ -366,19 +371,20 @@ def main():
     h_cmov, _ = symlib.read_subhalos(sim_dir, comoving=True)
     last_snap = param["n_snap"] - 1
 
+    r_bins = np.linspace(.01, 1, 2*n_bins + 1) # In units of Rvir(z=0)
     r_host_halo = h["rvir"][0,-1]
     r_bins = r_bins*r_host_halo # Locally, we'll convert out fo normalized units
-    print('rbins',r_bins)
-    v_bins = np.linspace(-500,500,n_bins+1)
-    VR_hist = np.zeros((n_bins, n_bins))
+    v_bins = np.linspace(-400,400,2*n_bins+1)
+    VR_hist = np.zeros((2*n_bins, 2*n_bins))
+    VR_hist_star = np.zeros((2*n_bins, 2*n_bins))
+
 
 
     for i in target_subs:
         # Only work with particles where this flag is true.
         ok = symlib.read_particles(part_info, sim_dir, last_snap,
                                    "valid", owner=i)
-        #ok = (mp_star[i] > 0)
-
+        ok_star = ok & (mp_star[i] > 0)
 
         v = symlib.read_particles(part_info, sim_dir, last_snap, "v", owner=i)
         x = symlib.read_particles(part_info, sim_dir, last_snap, "x", owner=i)
@@ -390,52 +396,67 @@ def main():
         norm = np.linalg.norm(x_i, axis = 1)
         r_hat = np.copy(x_i)
         for dim in range(3): r_hat[:,dim] /= norm
-        #if i < 3:
-            #print('v',v_i)
-            #print('x',x_i)
-
-            #print(np.shape(r_hat))
 
         v_r = np.sum(v_i*r_hat, axis = 1)#np.dot(v_i,r_hat)*r_hat
-
-        #if i < 3:
-            #print('v_r', v_r)
-            #edit
 
         r_host = np.sqrt(np.sum(x_i**2, axis=1))
         #rf[i] = np.ones(len(ok))*-1
         #rf[i][ok] = r_host[ok]
-        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins])
-        R, _ = np.histogram(r_host[ok], bins = r_bins)
-        V, _ = np.histogram(v_r[ok], bins = v_bins)
+        VR, xedges, yedges = np.histogram2d(r_host[ok], v_r[ok], [r_bins,v_bins], density = False)
+        X, Y = np.meshgrid(xedges, yedges)
+        VR_star, xedges_star, yedges_star = np.histogram2d(r_host[ok_star], v_r[ok_star], [r_bins,v_bins], weights=mp_star[i][ok_star]/h100, density = False)
+        X_star, Y_star = np.meshgrid(xedges_star, yedges_star)
 
         VR_hist += VR
-        if i < 5:
+        VR_hist_star += VR_star
+        #if i < 5:
             #print(xedges, yedges)
             #print('rhost',r_host[ok])
             #print('VR',VR)
-            print('median',
-                np.median(v_i, axis = 0),
-                np.median(x_i, axis = 0),
-                np.sqrt(np.mean(v_i**2, axis = 0)),
-                np.sqrt(np.mean(x_i**2, axis = 0))
-            )
+            # print('median',
+            #     np.median(v_i, axis = 0),
+            #     np.median(x_i, axis = 0),
+            #     np.sqrt(np.mean(v_i**2, axis = 0)),
+            #     np.sqrt(np.mean(x_i**2, axis = 0))
+            # )
+            #
+            # print('R', R)
+            # print('V',V)
+            # print('v_i', v_i[:5,:])
+            # print('v_r', v_r[:5])
+            # print('med v_r', np.median(v_r, axis = 0))
+            # print('v_r_rms', np.std(v_r))
+            # print('x_i', x_i[:5,:])
+            # print('r_hat', r_hat[:5,:])
+    # PLOTTING
+    plt.rcParams['figure.facecolor'] = 'white'
+    plt.rcParams['figure.figsize'] = [10.0, 8.0]
+    plt.rcParams['font.size'] = 20
+    plt.rcParams['legend.fontsize'] = 'large'
+    plt.rcParams['figure.titlesize'] = 'medium'
+    plt.rcParams['font.family'] = 'Serif'
+    plt.rcParams['text.usetex'] = True
 
-            print('R', R)
-            print('V',V)
-            print('v_i', v_i[:5,:])
-            print('v_r', v_r[:5])
-            print('med v_r', np.median(v_r, axis = 0))
-            print('v_r_rms', np.std(v_r))
-            print('x_i', x_i[:5,:])
-            print('r_hat', r_hat[:5,:])
+    fig, ax = plt.subplots(2,1)
 
-    fig, ax = plt.subplots()
-    X, Y = np.meshgrid(xedges, yedges)
-    print(VR_hist)
+    #so 0 values are visualized as NaN black bins
+    VR_hist[VR_hist == 0] = np.nan
+    VR_hist_star[VR_hist_star == 0] = np.nan
+    cmap = cm.get_cmap('turbo')
+    cmap.set_bad(color='k')
 
     #ax.imshow(VR_hist, vmin=.0000001)#, aspect = 'equal', extent = (np.min(r_bins), np.max(r_bins), np.min(v_bins), np.max(v_bins)))
-    ax.pcolormesh(X,Y,VR_hist)
+    im0 = ax[0].pcolormesh(X,Y,(VR_hist.T*mp), label = 'DM particles', cmap = cmap, vmax = 5e8) # reaches 7e8
+    ax[0].set_ylabel(r"$v_r$ [kpc/s]")
+    #ax[0].set_xlabel("Radius [kpc]")
+    ax[0].text(200,300,'DM particles', c = 'w')
+    fig.colorbar(im0, ax = ax[0])
+
+    im1 = ax[1].pcolormesh(X_star,Y_star,(VR_hist_star.T), label = 'Star particles', cmap = cmap, vmax = 1e6) # reaches 4e6
+    ax[1].set_ylabel(r"$v_r$ [kpc/s]")
+    ax[1].set_xlabel("Radius [kpc]")
+    ax[1].text(200,300,'Star particles', c = 'w')
+    fig.colorbar(im1, ax = ax[1])
     fig.savefig(plot_dir+"phasespace.png")
 
 
