@@ -28,7 +28,7 @@ tree_dir = "/sdf/group/kipac/u/ollienad/MW_zoomins/%s/output/rockstar/trees/"
 data_product_dir = "/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns/SymphonyMilkyWay/%s/"
 
 
-um_fmt = "/sdf/group/kipac/u/ycwang/MWmass_new/%s/output/rockstar/groupcat/sfr_catalog_%%.6f.txt"
+um_fmt = "/sdf/group/kipac/u/ycwang/MWmass_new/%s/output/rockstar/groupcat/sfr_catalog_%%s.txt"
 
 tree_style = "ct_rvmax"
 fmt_string = ("%%d %%d %s %s %d %s %s %s %s %s" %
