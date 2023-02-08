@@ -272,10 +272,13 @@ class MassProfile(object):
 
         m = len(dr)*self.mp
         conv_limit = 0.001
-        
+        iter_max = 20
+
         mp, eps = self.mp, self.eps
 
+        iters = 0
         while True:
+            iters += 1
             r_tidal = self._tidal_radius_iter(m, dx_core, dv_core,
                                               method=method)
             ok = dr < r_tidal
@@ -294,8 +297,8 @@ class MassProfile(object):
                 return 0.0, 0.0
             if np.abs(m/m_tidal - 1) < conv_limit:
                 return r_tidal, m_tidal
-
-            
+            if iters > iter_max:
+                return r_tidal, m_tidal
             m = m_tidal
 
         assert(0)
