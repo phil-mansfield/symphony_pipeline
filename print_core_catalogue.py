@@ -224,7 +224,6 @@ def print_halo(config_name, target_idx, flags):
             f_core_32 = np.sum(r_core < r_50_bound)/32
             f_core_32_rs = np.sum(r_h < r_50_bound_h)/32
 
-            print(r_core[0])
             with open(out_file, "a") as fp:
                 print(("%d %d "+"%.6f "*3+"%.6f "*3+"%.6f "*3+"%.6g "*3+"%.6g "+"%.6f "+"%.6f "+"%6.f") %
                       (snap, i_sub, xc[0], xc[1], xc[2], vc[0], vc[1], vc[2],
