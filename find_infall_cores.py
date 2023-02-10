@@ -61,21 +61,21 @@ def main():
         infall_cores = np.zeros((len(h), N_CORE), dtype=np.int32)
 
         for snap in range(len(scale)):
-            if snap not in hist["merger_snap"][1:]: continue
+            if snap not in hist["first_infall_snap"][1:]: continue
             print("  snap %3d" % snap)
 
             sd = sh.SnapshotData(info, sim_dir, snap, scale[snap], h_cmov,
                                  param, include_false_selections=True)
             prof = sh.MassProfile(sd.param, snap, h, sd.x, sd.owner, sd.valid)
         
-            sub_idxs = np.where(hist["merger_snap"] == snap)[0]
+            sub_idxs = np.where(hist["first_infall_snap"] == snap)[0]
 
             for i_sub in sub_idxs:
                 if i_sub == 0 or hist["false_selection"][i_sub]: continue
                 print("   ", i_sub)
 
-                merger_snap = hist["merger_snap"][i_sub]
-                m_merger = h["mvir"][i_sub,hist["merger_snap"][i_sub]]
+                merger_snap = hist["first_infall_snap"][i_sub]
+                m_merger = h["mvir"][i_sub,hist["first_infall_snap"][i_sub]]
                 mp = param["mp"]
                 peak_snap = np.argmax(h["mvir"][i_sub,:])
                 m_peak = hist["mpeak"][i_sub]
