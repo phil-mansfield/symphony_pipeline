@@ -65,6 +65,7 @@ def get_um_data(sim_dir):
 
         id, desc_id = id[order], desc_id[order]
         x, v, rank = x[order], v[order], rank[order]
+        mvir, vmax = mvir[order], vmax[order]
         mstar, micl, sfr = mstar[order], micl[order], sfr[order]
         already_used = np.zeros(len(id), dtype=bool)
         
@@ -95,7 +96,7 @@ def get_um_data(sim_dir):
         um["rank"][ok,snap] = rank[idx[ok]]
         um["mvir"][ok,snap] = mvir[idx[ok]]
         um["vmax"][ok,snap] = vmax[idx[ok]]
-        um["is_orphan"][:,snap] = target_ids > 1e15
+        um["is_orphan"][:,snap] = False
         um["ok"][:,snap] = ok
         
         next_id[ok] = desc_id[idx[ok]]
