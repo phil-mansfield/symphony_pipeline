@@ -19,13 +19,13 @@ def delta(x, x0):
 def distance(x, x0):
     return np.sqrt(np.sum(delta(x, x0)**2, axis=1))
 
-def n_most_bound(xc, vc, x, v, ok, n_core, param):
+def n_most_bound(xc, vc, x, v, ok, n_core, param, a):
     if np.sum(ok) < n_core:
         return np.ones(n_core)*-1
-
+    
     dx, dv = delta(x, xc), delta(v, vc)
     
-    mp, eps = param["mp"]/param["h100"], param["eps"]/param["h100"]
+    mp, eps = param["mp"]/param["h100"], param["eps"]/param["h100"]*a
     # We need to do exactly one unbinding pass here because we're only using
     # smoothly accreted particles.
     E_ok = gravitree.binding_energy(dx[ok], dv[ok], mp, eps, n_iter=1)
@@ -33,7 +33,8 @@ def n_most_bound(xc, vc, x, v, ok, n_core, param):
     E[ok] = E_ok
 
     part = np.argpartition(E, n_core)[:n_core]
-    part_order = np.argsort(E[part])
+    part_order = np.argsort(E[part])    
+
     return part[part_order]
 
 """
@@ -73,7 +74,8 @@ def rockstar_cores(snap_info, h, sub_idxs, n_core):
         ok = valid & (owner == 0)
         
         xc, vc = h["x"][i_sub,snap], h["v"][i_sub,snap]
-        core_idxs[i_sub,:] = n_most_bound(xc, vc, x, v, ok, n_core, param)
+        core_idxs[i_sub,:] = n_most_bound(
+            xc, vc, x, v, ok, n_core, param, snap_info.a)
         
     return core_idxs
 
@@ -105,6 +107,7 @@ class SnapshotData(object):
             self.ok[i] = self.valid[i] & (self.owner[i] == 0)
             
         self.mp, self.eps = symlib.set_units_parameters(a, param)
+        self.a = symlib.scale_factors(sim_dir)[snap]
         self.snap = snap
         self.param = param
 
@@ -142,8 +145,9 @@ class SubhaloTrack(object):
 
         x_sf, v_sf, rho_sf, owner_sf, peak_n = subfind.subfind(
             x[ok], v[ok], mp, k=self.k)
+
         owner_all = np.ones(len(x), dtype=int)*-1
-        owner_all[ok] = owner_sf
+        owner_all[ok] = owner_sf        
 
         owner_votes = owner_all[prev_core]
 

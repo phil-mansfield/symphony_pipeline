@@ -49,6 +49,8 @@ def main():
         param = symlib.simulation_parameters(sim_dir)
         h, hist = symlib.read_subhalos(sim_dir, comoving=True,
                                        include_false_selections=True)
+        scale = symlib.scale_factors(sim_dir)
+
         h_cmov = np.copy(h)
         info = symlib.ParticleInfo(sim_dir)
 
@@ -81,7 +83,7 @@ def main():
                 infall_cores[i_sub] = sh.n_most_bound(
                     h["x"][i_sub,snap], h["v"][i_sub,snap],
                     sd.x[i_sub], sd.v[i_sub], sd.ok[i_sub],
-                    N_CORE, sd.param
+                    N_CORE, sd.param, scale[snap]
                 )
 
         write_infall_cores(sim_dir, infall_cores)

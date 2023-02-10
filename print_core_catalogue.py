@@ -168,6 +168,9 @@ def print_halo(config_name, target_idx, flags):
             if snap < starting_snap[i_sub]: continue
             if hist["false_selection"][i_sub]: continue
             if -1 in sd.infall_cores[i_sub]: continue
+            voters = sd.infall_cores[i_sub][:VOTING_NP]
+            if np.sum(sd.ok[i_sub][voters]) < VOTING_NP: continue
+
             print("   ", i_sub)
 
             if tracks[i_sub] is None:
@@ -218,6 +221,7 @@ def print_halo(config_name, target_idx, flags):
                 r_50_bound_h = 0.0
             
             cores = sd.infall_cores[i_sub]
+
             r_core = np.sqrt(np.sum(dxp[cores]**2, axis=1))
             r_h = np.sqrt(np.sum(dxh[cores]**2, axis=1))
 
