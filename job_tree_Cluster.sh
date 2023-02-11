@@ -7,6 +7,6 @@
 #SBATCH --output=/sdf/home/t/tdacunha/logs/log.Cluster_tree.%j.oe
 #SBATCH --mem-per-cpu=32G
 
-config=configs/Cluster/config.txt
+config=~/symphony_pipeline/configs/Cluster/config.txt
 index=-1
-go run write_binary_tree.go ${config} ${index} && go run write_tree_header.go ${config} ${index} && go run write_subhalos_file.go ${config} ${index}
+go run ~/symphony_pipeline/write_binary_tree.go ${config} ${index} && go run ~/symphony_pipeline/write_tree_header.go ${config} ${index} && go run ~/symphony_pipeline/write_subhalos_file.go ${config} ${index}
