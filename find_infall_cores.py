@@ -66,7 +66,6 @@ def main():
 
             sd = sh.SnapshotData(info, sim_dir, snap, scale[snap], h_cmov,
                                  param, include_false_selections=True)
-            prof = sh.MassProfile(sd.param, snap, h, sd.x, sd.owner, sd.valid)
         
             sub_idxs = np.where(hist["first_infall_snap"] == snap)[0]
 

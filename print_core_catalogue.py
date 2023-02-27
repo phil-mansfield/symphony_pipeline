@@ -128,7 +128,7 @@ def print_halo(config_name, target_idx, flags):
         min_snap = calculate_min_snap(prev_file_names)
 
     max_snap = len(scale) - 1
-    starting_snap = np.maximum(hist["merger_snap"], min_snap)
+    starting_snap = np.maximum(hist["first_infall_snap"], min_snap)
     infall_cores = [None]*len(h)
 
     with open(out_file, "a") as fp:
@@ -160,7 +160,11 @@ def print_halo(config_name, target_idx, flags):
 
         sd = sh.SnapshotData(info, sim_dir, snap, scale[snap], h_cmov, param,
                              include_false_selections=True)
-        prof = sh.MassProfile(sd.param, snap, h, sd.x, sd.owner, sd.valid)
+
+        if h[0][snap]["ok"]:
+            prof = sh.MassProfile(sd.param, snap, h, sd.x, sd.owner, sd.valid)
+        else:
+            prof = None
         
         for j in range(len(targets)):
             i_sub = targets[j]
@@ -189,8 +193,11 @@ def print_halo(config_name, target_idx, flags):
             dxp, dvp = sh.delta(xp, xc), sh.delta(vp, vc)
             ok, valid = sd.ok[i_sub], sd.valid[i_sub]
 
-            r_tidal, m_tidal = prof.tidal_radius(
-                xc, xp[valid], vc, vp[valid], bound_only=True)
+            if prof is None:
+                r_tidal, m_tidal = -1, -1
+            else:
+                r_tidal, m_tidal = prof.tidal_radius(
+                    xc, xp[valid], vc, vp[valid], bound_only=True)
 
             is_bound = gravitree.binding_energy(
                 dxp[valid], dvp[valid], sd.mp, sd.eps, n_iter=10) < 0
