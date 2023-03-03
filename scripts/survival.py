@@ -29,8 +29,8 @@ COMBINE_HR = True
 
 # determine whether we make a the "vmax" plto with orphan model comparions or
 # the "mass" plot with just subhalo masses.
-#ratio_type = "vmax"
-ratio_type = "mass"
+ratio_type = "vmax"
+#ratio_type = "mass"
 
 def plot_arrow_lines(ax, xc, yc, x_arrow, dlogy_arrow, color):
     """ Plots a curve with downward pointing arrows underneath it. ax is the 
@@ -102,8 +102,8 @@ def j_vdb_16_vmax_ratio(m_ratio):
     """ j_vdb_16_vmax_ratio converts an msub/mpeak ratio to the equivalent
     vmax/vpeak ratio according to the fit in Jiang & van den Bosch 2016.
     """
-    eta, mu = 0.3, 0.4
-    return 2*mu * m_ratio**eta / (1 + m_ratio)**eta
+    eta, mu = 0.37, 0.45
+    return 2**mu * m_ratio**eta / (1 + m_ratio)**mu
 
 def survival_time():
     """ The left panel of surival curve plots
