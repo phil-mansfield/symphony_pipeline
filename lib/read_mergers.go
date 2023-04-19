@@ -4,6 +4,7 @@ import (
 	"os"
 	"encoding/binary"
 	"math"
+	"path"
 )
 
 const (
@@ -19,6 +20,41 @@ type Mergers struct {
 	Mvir, Rvir, Vmax, RVmax [][]float32
 	ID [][]int32
 	X, V [][][3]float32
+}
+
+func getOmegaM(suiteName string) float64 {
+	return map[string]float64{
+		"MWest": 0.286,
+		"SymphonyLMC": 0.286,
+		"SymphonyMilkyWay": 0.286,
+		"SymphonyGroup": 0.286,
+		"SymphonyLCluster": 0.3,
+		"SymphonyCluster": 0.25,
+	}[suiteName]
+}
+
+func getScaleFactors(mergerName string) []float64 {
+	haloDir := path.Dir(mergerName)
+	fname := path.Join(haloDir, "snap_scale.dat")
+
+    f, err := os.Open(fname)
+    if err != nil { panic(err.Error()) }
+    defer f.Close()
+
+	nSnap := int64(0)
+    err = binary.Read(f, binary.LittleEndian, &nSnap)
+    if err != nil { panic(err.Error()) }
+	scales := make([]float64, nSnap)
+    err = binary.Write(f, binary.LittleEndian, scales)
+    if err != nil { panic(err.Error()) }
+
+	return scales
+}
+
+func suiteHaloName(mergerName string) (suite, halo string) {
+	haloDir := path.Dir(mergerName)
+	suiteDir := path.Dir(haloDir)
+	return path.Base(suiteDir), path.Base(haloDir)
 }
 
 func ScaleFactors(min, max float64, n int) []float64 {
@@ -66,7 +102,7 @@ func binaryReadVector(f *os.File, n int) [][3]float32 {
 	return out
 }
 
-func ReadMergers(fname string) *Mergers {
+func ReadMergers(fname string,) *Mergers {
 	f, err := os.Open(fname)
 	if err != nil { panic(err.Error()) }
 	defer f.Close()
