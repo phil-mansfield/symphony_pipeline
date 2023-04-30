@@ -77,7 +77,7 @@ func XV(cfg *lib.Config, cfgi int) {
 
 		FillHaloVector(tags, x, xh, snap)
 		FillHaloVector(tags, v, vh, snap)
-
+	
 		lib.WriteVector(pHeader, cfg.BaseDir[cfgi], "x", snap, xh)
 		lib.WriteVector(pHeader, cfg.BaseDir[cfgi], "v", snap, vh)
 
@@ -148,7 +148,7 @@ func FillHaloVector(tags *lib.Tags, x [][3]float32,
 	for i := range xh {
 		xh[i] = xh[i][:cap(xh[i])]
 		for j := range xh[i] {
-			xh[i][j] = x[tags.ID[i][j] - 1]
+			xh[i][j] = x[tags.ID[i][j]]
 		}
 
 		xh[i] = tags.TrimVector(i, xh[i], snap)
