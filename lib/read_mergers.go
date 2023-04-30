@@ -1,16 +1,11 @@
 package lib
 
 import (
+	"fmt"
 	"os"
 	"encoding/binary"
 	"math"
 	"path"
-)
-
-const (
-	OmegaM = 0.286
-	ScaleMin = 1/20.0
-	ScaleMax = 1.0
 )
 
 type Mergers struct {
@@ -23,7 +18,7 @@ type Mergers struct {
 }
 
 func getOmegaM(suiteName string) float64 {
-	return map[string]float64{
+	omegaM, ok := map[string]float64{
 		"MWest": 0.286,
 		"SymphonyLMC": 0.286,
 		"SymphonyMilkyWay": 0.286,
@@ -31,6 +26,10 @@ func getOmegaM(suiteName string) float64 {
 		"SymphonyLCluster": 0.3,
 		"SymphonyCluster": 0.25,
 	}[suiteName]
+	if !ok {
+		panic(fmt.Sprintf("Unrecognized suite, %s", suiteName))
+	}
+	return omegaM
 }
 
 func getScaleFactors(mergerName string) []float64 {
@@ -45,14 +44,14 @@ func getScaleFactors(mergerName string) []float64 {
     err = binary.Read(f, binary.LittleEndian, &nSnap)
     if err != nil { panic(err.Error()) }
 	scales := make([]float64, nSnap)
-    err = binary.Write(f, binary.LittleEndian, scales)
+    err = binary.Read(f, binary.LittleEndian, scales)
     if err != nil { panic(err.Error()) }
 
 	return scales
 }
 
 func suiteHaloName(mergerName string) (suite, halo string) {
-	haloDir := path.Dir(mergerName)
+	haloDir := path.Dir(path.Dir(mergerName))
 	suiteDir := path.Dir(haloDir)
 	return path.Base(suiteDir), path.Base(haloDir)
 }
@@ -73,13 +72,11 @@ func MvirToRvir(mvir, a, omegaM float64) float64 {
 	rhoCrit := 2.77519737e11*(Ez*Ez)
 	omegaMz := omegaM/(a*a*a)/(Ez*Ez)
 
-	//rhoM := omegaMz * rhoCrit
-
 	x := omegaMz - 1
 	deltaVir := 18*math.Pi*math.Pi + 82*x - 39*x*x
 	rhoVir := rhoCrit*deltaVir
 
-	rPhys := math.Pow(mvir/(rhoVir*math.Pi*3/3), 1.0/3)
+	rPhys := math.Pow(mvir/(rhoVir*math.Pi*4/3), 1.0/3)
 	rComv := rPhys/a
 
 	return rComv
@@ -114,7 +111,9 @@ func ReadMergers(fname string,) *Mergers {
 	nh, ns := int(nh32), int(ns32)
 	m.Haloes, m.Snaps = nh, ns
 
-	a := ScaleFactors(ScaleMin, ScaleMax, ns)
+	a := getScaleFactors(fname)
+	suite, _ := suiteHaloName(fname)
+	omegaM := getOmegaM(suite)
 
 	m.Index = make([]int32, nh)
 	binaryRead(f, m.Index)
@@ -130,7 +129,7 @@ func ReadMergers(fname string,) *Mergers {
 				m.Rvir[i][j] = -1
 			} else {
 				m.Rvir[i][j] = float32(
-					MvirToRvir(float64(m.Mvir[i][j]), a[j], OmegaM))
+					MvirToRvir(float64(m.Mvir[i][j]), a[j], omegaM))
 			}
 		}
 	}
