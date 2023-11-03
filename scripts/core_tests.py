@@ -16,10 +16,10 @@ USE_TEX = True
 SHMF_LIM = 1e6
 SHMF_LIM_NAME = None
 
-#RAD_LIM = 15
-#RAD_LIM_NAME = "15"
 RAD_LIM = 1e6
 RAD_LIM_NAME = None
+
+SUBFIND_RADIUS_CDF = False
 
 SUITE = "SymphonyMilkyWay"
 OUT_DIR = "../plots/core_tracking"
@@ -28,6 +28,8 @@ invalid_hosts = []
 #SUITE = "SymphonyMilkyWay"
 #OUT_DIR = "../plots/core_plots/MilkyWay"
 #invalid_hosts = []
+
+suffix="fid3"
 
 def plot_mass_loss_old():
     palette.configure(USE_TEX)
@@ -41,7 +43,7 @@ def plot_mass_loss_old():
     
     h, hist = symlib.read_subhalos(param, sim_dir)
     h = symlib.set_units_halos(h, a, param)
-    c = symlib.read_cores(sim_dir)
+    c = symlib.read_cores(sim_dir, suffix=suffix)
 
     targets = np.arange(1, len(h), dtype=int)
 
@@ -89,7 +91,7 @@ def plot_mass_loss_old():
 def plot_mass_loss():
     palette.configure(USE_TEX)
 
-    out_dir = path.join(OUT_DIR, "sub_mass_loss")
+    out_dir = path.join(OUT_DIR, "mass_loss_%s" % suffix, "h0")
     suite = SUITE
     base_dir = BASE_DIR
     sim_dir = symlib.get_host_directory(base_dir, suite, 0)
@@ -98,56 +100,59 @@ def plot_mass_loss():
     a = symlib.scale_factors(sim_dir)
     
     h, hist = symlib.read_subhalos(sim_dir)
-    c = symlib.read_cores(sim_dir)
+    c = symlib.read_cores(sim_dir, suffix=suffix)
 
     targets = np.arange(1, len(h), dtype=int)
 
-    # fig, ax = plt.subplots(2, figsize=(7, 14), sharex=True)
-    fig, ax = plt.subplots(figsize=(6,6))
-    
-    for i_sub in targets:
-        if i_sub != 14: continue
-        print("i_sub =", i_sub)
-        """
+    fig, ax = plt.subplots(2, figsize=(7, 14), sharex=True)
+    #fig, ax = plt.subplots(figsize=(6,6))
+
+    is_app_target = np.array([5, 8, 14, 15, 32, 50, 51, 142, 143], dtype=int)
+
+    for i_sub in is_app_target:
+        print(i_sub)
         ax[0].cla()
         ax[1].cla()
 
-        ax[0].plot(a, h["mvir"][0], "--", c="k")
+        ax[1].plot(a, h["mvir"][0], "--", c="k", label=r"${\rm host}\ M_{\rm vir}$")
         
-        okh, mvir = h["ok"][i_sub], h["mvir"][i_sub]
+        errh = h["ok"][i_sub]
+        okh, mvir = h["ok"][i_sub] & c["ok_rs"][i_sub], h["mvir"][i_sub]
         rh = np.sqrt(np.sum(h["x"][i_sub]**2, axis=1))
     
-        ax[0].plot(a[okh], mvir[okh], pc("r"), label=r"$M_{\rm vir,RS}$")
-        ax[1].plot(a[okh], rh[okh], pc("r"), label=r"$r_{\rm Rockstar}$")
+        ax[1].plot(a[errh], mvir[errh], pc("o"))
+        ax[1].plot(a[okh], mvir[okh], pc("r"))
+        ax[0].plot(a[errh], rh[errh], pc("o"))
+        ax[0].plot(a[okh], rh[okh], pc("r"), label=r"${\rm Rockstar}$")
+        ax[0].plot([], [], pc("o"), label=r"${\rm Rockstar\ (error)}$")
         okc = c["ok"][i_sub]
         m_bound, m_tidal = c["m_bound"][i_sub], c["m_tidal_bound"][i_sub]
         r_half = c["r50_bound"][i_sub]
         rc = np.sqrt(np.sum(c["x"][i_sub]**2, axis=1))
-        ax[0].plot(a[okc], m_bound[okc], pc("o"), label=r"$M_{\rm bound}$")
-        ax[0].plot(a[okc], m_tidal[okc], pc("b"), label=r"$M_{\rm tidal}$")
-        ax[1].plot(a[okc], rc[okc], pc("b"), label=r"$r_{\rm core}$")
-        ax[1].plot(a[okh], rh[okh], ":", c=pc("r"))
-        ax[1].plot(a, h[0]["rvir"], "--", c="k")
-        ax[1].plot(a[okc], r_half[okc], "--", c=pc("a"))
+        ax[1].plot(a[okc], m_bound[okc], pc("b"))
+        ax[0].plot(a[okc], rc[okc], pc("b"), 
+                   label=r"${\rm Symfind}$")
+        ax[0].plot(a[okh], rh[okh], ":", c=pc("r"))
+        ax[0].plot(a, h[0]["rvir"], "--", c="k", label=r"${\rm host\ }R_{\rm vir}$")
 
-        mp = param["mp"]/param["h100"]
-        ax[0].set_ylim(mp, None)
-        ax[0].fill_between([0, 1], [mp]*2, [25*mp]*2, color="k", alpha=0.2)
-        ax[0].set_yscale("log")
+        mp = param["mp"]/param["h100"]    
         ax[1].set_yscale("log")
-        ax[1].set_xlim(0, 1)
-        ax[1].set_ylim(np.min(h[0]["rvir"]), None)
+        ax[0].set_yscale("log")
+        ax[0].set_xlim(0, 1)
+        ax[0].set_ylim(np.min(h[0]["rvir"]), None)
         
-        ax[1].set_xlabel(r"$a(z)$")
-        ax[1].set_ylabel(r"$r\ ({\rm kpc})$")
-        ax[0].set_ylabel(r"$M\ (M_\odot)$")
+        ax[1].set_xlabel(r"$a(t)$")
+        ax[0].set_ylabel(r"$r\ ({\rm kpc})$")
+        ax[1].set_ylabel(r"$m\ (M_\odot)$")
 
-        ax[0].legend(loc="upper right", fontsize=16)
-        ax[1].legend(loc="lower left", fontsize=16)
+        ax[0].legend(loc="lower right", fontsize=17)
+        ax[1].legend(loc="lower right", fontsize=17)
 
-        fig.savefig(path.join(out_dir, "ml_%04d.png" % i_sub))
+        plt.subplots_adjust(hspace=0.1)
+        print(path.join(out_dir, "ml_%04d.pdf" % i_sub))
+        fig.savefig(path.join(out_dir, "ml_%04d.pdf" % i_sub))
+
         """
-
         ax.cla()
         
         okh, mvir = h["ok"][i_sub], h["mvir"][i_sub]
@@ -173,6 +178,7 @@ def plot_mass_loss():
         ax.legend(loc="lower right", fontsize=18)
 
         fig.savefig(path.join(out_dir, "ml_%04d.pdf" % i_sub))
+        """
 
 
 def mass_function():
@@ -227,8 +233,8 @@ def mass_function():
     fig_suites = [[0, 0], [1, 1], [1, 2], [1, 2]]
     fig_types = [[1, 0], [1, 0], [1, 1], [0, 0]]
     fig_suffix = ["main", "hr", "c", "rs"]
-    fig_labels = [[r"${\rm Particle{-}tracking}$", r"${\rm Rockstar}$"],
-                  [r"${\rm Particle{-}tracking}$", r"${\rm Rockstar}$"],
+    fig_labels = [[r"${\rm Symfind}$", r"${\rm Rockstar}$"],
+                  [r"${\rm Symfind}$", r"${\rm Rockstar}$"],
                   [r"${\rm High{-}res}$", r"${\rm Fiducial}$"], 
                   [r"${\rm High{-}res}$", r"${\rm Fiducial}$"]]
 
@@ -245,14 +251,15 @@ def mass_function():
             
             n_host = 0
             
-            for i_host in range(symlib.n_hosts(suite)):    
+            for i_host in range(symlib.n_hosts(suite)):
+                if i_host == 3: continue
                 print("%s: %2d/%2d" % (suite, i_host, symlib.n_hosts(suite) - 1))
 
                 sim_dir = symlib.get_host_directory(base_dir, suite, i_host)
 
                 if halo_type == 0:
                     hs[i_host], hists[i_host] = symlib.read_subhalos(sim_dir)
-                    cs[i_host] = symlib.read_cores(sim_dir)
+                    cs[i_host] = symlib.read_cores(sim_dir, suffix=suffix)
                 h, hist, c = hs[i_host], hists[i_host], cs[i_host]
 
                 if halo_type == 0:
@@ -271,6 +278,7 @@ def mass_function():
                 ok[0,-1] = False
                 
                 ok[:,-1] = ok[:,-1] & (hist["mpeak_pre"]/mvir[:,-1] < SHMF_LIM)
+                print(np.sum(hist["mpeak_pre"] > 4e5*300))
 
                 ratios.append(ratio[ok[:,-1]])
                 rads.append(r[ok[:,-1]])
@@ -309,7 +317,8 @@ def mass_function():
                 color = radii_colors[i_mult]
 
                 ax.plot(np.sort(ratio[ok]),
-                        np.arange(np.sum(ok))[::-1]/n_host,
+                        (np.arange(np.sum(ok))[::-1]/
+                         symlib.n_hosts(suites[suites_to_plot[i_curve]])),
                         ls=ls, c=color)                            
 
                 funcs[i_mult][i_curve] = interpolate.interp1d(
@@ -333,7 +342,16 @@ def mass_function():
 
     for i_fig in range(len(figs)):
         fig, ax, rat = figs[i_fig], axes[i_fig], rats[i_fig]
-        suffix = fig_suffix[i_fig]
+        f_suffix = fig_suffix[i_fig]
+
+        if i_fig == 0:
+            ax.set_title(r"${\rm Fiducial\ resolution}$")
+        elif i_fig == 1:
+            ax.set_title(r"${\rm High\ resolution}$")
+        elif i_fig == 2:
+            ax.set_title(r"${\rm Symfind}$")
+        elif i_fig == 3:
+            ax.set_title(r"${\rm Rockstar}$")
 
         if i_fig == 0 or i_fig == 1:
             for i_rad in range(len(radii_mults)):
@@ -351,26 +369,27 @@ def mass_function():
         ax.set_xlim(1e-5, 0.2)
         ax.set_ylim(1e-1, 2e3)
 
-        rat.set_xlabel(r"$\mu=m_{\rm peak,sub}/M_{\rm host}$")
+        rat.set_xlabel(r"$\mu=m_{\rm peak}/M_{\rm vir}$")
         if i_fig == 0 or i_fig == 1:
-            rat.set_ylabel(r"$N_{\rm pt}/N_{\rm Rockstar}$")
+            rat.set_ylabel(r"$N_{\rm Sym}/N_{\rm Rock}$")
         else:
             rat.set_ylabel(r"$N_{\rm HR}/N_{\rm fid}$")
-        ax.set_ylabel(r"$N(>\mu)$")
+        ax.set_ylabel(r"$N(>m_{\rm peak}/M_{\rm vir})$")
         if i_fig == 1 and SHMF_LIM_NAME is None:
             rat.set_ylim(0.6, 4)
         elif i_fig == 2 and SHMF_LIM_NAME is not None:
             rat.set_ylim(0.9, 1.4)
-        if i_fig > 0: 
-            rat.set_xlim(1e-5, 4e-2)
+        #if i_fig > 0: 
+        #    rat.set_xlim(1e-5, 4e-2)
 
         ax.legend(loc="lower left", fontsize=17)
     
         if SHMF_LIM_NAME is None:
-            fig.savefig(path.join(OUT_DIR, "core_shmf_%s.pdf" % suffix))
+            print(path.join(OUT_DIR, "core_shmf_%s.pdf" % f_suffix))
+            fig.savefig(path.join(OUT_DIR, "core_shmf_%s.pdf" % f_suffix))
         else:
             fig.savefig(path.join(OUT_DIR, "core_shmf_%s_%s.pdf" %
-                                  (suffix, SHMF_LIM_NAME)))
+                                  (f_suffix, SHMF_LIM_NAME)))
 
 def mass_function_resolution():
     print("mass_function_resolution")
@@ -402,7 +421,7 @@ def mass_function_resolution():
             sim_dir = symlib.get_host_directory(base_dir, suite, i_host)
             
             h, hist = symlib.read_subhalos(sim_dir)
-            c = symlib.read_cores(sim_dir)
+            c = symlib.read_cores(sim_dir, suffix=suffix)
 
             mvir, x, ok = combine_cores_rockstar(h, c, param)
             r = np.sqrt(np.sum(x[:,-1,:]**2, axis=1))
@@ -518,7 +537,7 @@ def survival_time():
 
         a = symlib.scale_factors(sim_dir)
         h, hist = symlib.read_subhalos(sim_dir)
-        c = symlib.read_cores(sim_dir)
+        c = symlib.read_cores(sim_dir, suffix=suffix)
 
         m_vir = h["mvir"][1:,:]
         m_peak = np.max(h["mvir"], axis=1)[1:]
@@ -597,15 +616,15 @@ def stitching_errors():
     if suite == "SymphonyMilkyWay":
         bins = [(10**2.5, 10**3), (10**3.5, 10**4), (10**4.5, 10**5)]
         colors = [pc("b"), pc("o"), pc("r")]
-        labels = [r"$10^{2.5} < N_{\rm peak} < 10^{3}$",
-                  r"$10^{3.5} < N_{\rm peak} < 10^{4}$",
-                  r"$10^{4.5} < N_{\rm peak} < 10^{5}$"]
+        labels = [r"$10^{2.5} < n_{\rm peak} < 10^{3}$",
+                  r"$10^{3.5} < n_{\rm peak} < 10^{4}$",
+                  r"$10^{4.5} < n_{\rm peak} < 10^{5}$"]
     else:
         bins = [(10**2.5, 10**3), (10**3.5, 10**4), (10**4.5, 10**5)]
         colors = [pc("b"), pc("o"), pc("r")]
-        labels = [r"$10^{2.5} < N_{\rm peak} < 10^{3}$",
-                  r"$10^{3.5} < N_{\rm peak} < 10^{4}$",
-                  r"$10^{4.5} < N_{\rm peak} < 10^{5}$"]        
+        labels = [r"$10^{2.5} < n_{\rm peak} < 10^{3}$",
+                  r"$10^{3.5} < n_{\rm peak} < 10^{4}$",
+                  r"$10^{4.5} < n_{\rm peak} < 10^{5}$"]        
 
     n_mass_bins = len(bins)
 
@@ -630,7 +649,7 @@ def stitching_errors():
 
         a = symlib.scale_factors(sim_dir)
         h, hist = symlib.read_subhalos(sim_dir)
-        c = symlib.read_cores(sim_dir)
+        c = symlib.read_cores(sim_dir, suffix=suffix)
 
         mp = param["mp"]/param["h100"]
 
@@ -662,10 +681,7 @@ def stitching_errors():
 
             r_peri = np.zeros(len(h))
             for k in range(len(h)):
-                if np.sum(c["ok_rs"][k]) == 0:
-                    r_peri[k] = np.min(r_h[k,h["ok"][k]])
-                else:
-                    r_peri[k] = np.min(r_h[k,c["ok_rs"][k]])
+                r_peri[k] = r_h[k, h["ok"][k]][-1]
 
             ok = h["ok"]
             mass_ok = (m_peak/mp >= bins[j][0]) & (m_peak/mp < bins[j][1])
@@ -711,16 +727,22 @@ def stitching_errors():
         ax1.plot(right_bin_now, f_err_now, c=colors[j], label=labels[j])
         ax2.plot(right_bin_disrupt, f_err_disrupt, c=colors[j], label=labels[j])
 
+    ax1.set_title(r"${\rm Surviving}$")
     ax1.set_xscale("log")
     ax1.set_xlabel(r"$r/R_{\rm vir}$")
-    ax1.set_ylabel(r"$f_{\rm err,RS}(< r/R_{\rm vir})$")
-    ax1.legend(loc="upper right", fontsize=17)
+    ax1.set_ylabel(r"$f_{{\rm err},z=0,{\rm RS}}(< r/R_{\rm vir})$")
+    ax1.legend(loc="lower left", fontsize=17)
+    ax1.set_ylim(0, 1.0)
+    ax1.set_xlim(1e-3, 1)
     fig1.savefig(path.join(OUT_DIR, "core_stitching_now.pdf"))
 
+    ax2.set_title(r"${\rm Disrupted}$")
     ax2.set_xscale("log")
-    ax2.set_xlabel(r"$r_{\rm peri}/R_{\rm vir}$")
-    ax2.set_ylabel(r"$f_{\rm err,disrupt,RS}(< r_{\rm peri}/R_{\rm vir})$")
-    ax2.legend(loc="upper right", fontsize=17)
+    ax2.set_xlabel(r"$r_{\rm final}/R_{\rm vir}$")
+    ax2.set_ylabel(r"$f_{\rm err,disrupt,RS}(< r_{\rm final}/R_{\rm vir})$")
+    ax2.set_ylim(0, 1.0)
+    ax2.set_xlim(1e-3, 1)
+    ax2.legend(loc="lower left", fontsize=17)
     fig2.savefig(path.join(OUT_DIR, "core_stitching_disrupt.pdf"))
 
 def core_ok(c, param):
@@ -803,7 +825,7 @@ def ufd_frequency():
 
         sim_dir = symlib.get_host_directory(base_dir, suite, i)
         h, hist = symlib.read_subhalos(sim_dir)
-        c = symlib.read_cores(sim_dir)
+        c = symlib.read_cores(sim_dir, suffix=suffix)
 
         h_r = np.sqrt(np.sum(h["x"][1:,-1,:]**2, axis=1))
         h_ok = rockstar_ok(h, c, param)[1:,-1]
@@ -864,9 +886,10 @@ def radius_cdf():
     palette.configure(USE_TEX)
 
     base_dir = BASE_DIR
+    # Mean value in our cosmology
+    r200c_to_rvir = 0.9424831282895049
 
     gs_kw = {"height_ratios": [3, 1.5]}
-    #"""
     fig_main, axs_main = plt.subplots(nrows=2, sharex=True,
                                       gridspec_kw=gs_kw)
     ax_main, rat_main = axs_main[0], axs_main[1]
@@ -881,72 +904,65 @@ def radius_cdf():
     fig_hr, axs_hr = plt.subplots(nrows=2, sharex=True,
                                       gridspec_kw=gs_kw)
     ax_hr, rat_hr = axs_hr[0], axs_hr[1]
-    #"""
-    
-    """
-    _, rat_main = plt.subplots()
-    _, rat_c = plt.subplots()
-    _, rat_rs = plt.subplots()
-    _, rat_hr = plt.subplots()
-
-    fig_main, ax_main = plt.subplots()
-    fig_c, ax_c = plt.subplots()
-    fig_rs, ax_rs = plt.subplots()
-    fig_hr, ax_hr = plt.subplots()
-    """
 
     figs = [fig_main, fig_hr, fig_c, fig_rs]
     axes = [ax_main, ax_hr, ax_c, ax_rs]
     rats = [rat_main, rat_hr, rat_c, rat_rs]
 
-    #for rat in rats:
-    #    plt.plot([0, 1], [1, 1], "--", lw=1.5, c="k")
-
-    #npeak_cuts = [(10**2.5, 10**3), (10**3.5, 10**4), (10**4.5, 10**5)]
-    #npeak_cuts = [(10**2.5, 10**3), (10**3, 10**3.5), (10**3.5, 10**4),
-    #              (10**4, 10**4.5)][::-1]
-    #npeak_cuts = [(10**4, 10**4.5), (10**3.5, 10**4),
-    #              (10**3, 10**3.5), (10**2.5, 10**3)]
-    npeak_cuts = [
-        (10**2.5, np.inf),
-        #(10**3, np.inf),
-        (10**3.5, np.inf),
-        #(10**4, np.inf),
-        (10**4.5, np.inf)
-        #(10**5, np.inf)
-    ][::-1]
-    cut_labels = [r"$n_{\rm sub,peak} > 10^{2.5}$",
-                  #r"$n_{\rm sub,peak} > 10^{3}$",
-                  r"$n_{\rm sub,peak} > 10^{3.5}$",
-                  #r"$n_{\rm sub,peak} > 10^{4}$",
-                  r"$n_{\rm sub,peak} > 10^{4.5}$"
-                  #r"$n_{\rm sub,peak} > 10^{5}$"
-    ][::-1]
-    cut_colors = [pc("r"), pc("o"), pc("b")]
-
-    #cut_labels = [
-        #r"$10^{2.5} < N_{\rm peak} < 10^3$",
-        #r"$10^{3.5} < N_{\rm peak} < 10^4$",
-        #r"$10^{4.5} < N_{\rm peak} < 10^5$",
-    #    r"$10^{2.5} < n_{\rm sub,peak} < 10^{3}$",
-        #r"$10^{3} < n_{\rm sub,peak} < 10^{3.5}$",
-    #    r"$10^{3.5} < n_{\rm sub,peak} < 10^{4}$",
-    #    r"$10^{4} < n_{\rm sub,peak} < 10^{4.5}$",
-    #][::-1]
-    #cut_colors = [pc("r"), pc("o"), pc("b"), pc("p")][::-1]
-    #cut_colors = [pc("r"), pc("b"), pc("p")]
-    #cut_colors = 
+    if SUBFIND_RADIUS_CDF:
+        npeak_cuts = [
+            (5.9e1, np.inf),
+            (4.7e2, np.inf),
+            (3.7e3, np.inf),
+            (1.3e4, np.inf),
+            (1.1e5, np.inf),
+        ][::-1]
+        cut_labels = [
+            r"$n_{\rm peak} > 5.9\times 10^{1}$",
+            r"$n_{\rm peak} > 4.7\times 10^{2}$",
+            r"$n_{\rm peak} > 3.7\times 10^{3}$",
+            r"$n_{\rm peak} > 1.3\times 10^{4}$",
+            r"$n_{\rm peak} > 1.1\times 10^{5}$"
+        ][::-1]
+        cut_colors = [pc("r"), pc("o"), pc("g"), pc("b"), pc("p")]
+        subfind_files = ["A5.csv", "A4.csv", "A3.csv", "A2.csv", "A1.csv"][::-1]
+    else:
+        """
+        """
+        npeak_cuts = [
+            (10**2.5, np.inf),
+            (10**3.5, np.inf),
+            (10**4.5, np.inf),
+            #(10**3, np.inf),
+            #(10**4, np.inf),
+            #(10**5, np.inf),
+        ][::-1]
+        cut_labels = [r"$n_{\rm peak} > 10^{2.5}$",
+                      r"$n_{\rm peak} > 10^{3.5}$",
+                      r"$n_{\rm peak} > 10^{4.5}$"
+        ][::-1]
+        cut_colors = [pc("r"), pc("o"), pc("b")]
 
     suites = ["SymphonyMilkyWay", "SymphonyMilkyWayHR", "SymphonyMilkyWayLR"]
     
     fig_suites = [[0, 0], [1, 1], [1, 2], [1, 2]]
     fig_types = [[1, 0], [1, 0], [1, 1], [0, 0]]
     fig_suffix = ["main", "hr", "c", "rs"]
-    fig_labels = [[r"${\rm Particle{-}tracking}$", r"${\rm Rockstar}$"],
-                  [r"${\rm Particle{-}tracking}$", r"${\rm Rockstar}$"],
-                  [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"], 
-                  [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"]]
+    if SUBFIND_RADIUS_CDF:
+        fig_labels = [[r"${\rm Symfind}$", r"${\rm Subfind}$"],
+                      [r"${\rm Symfind}$", r"${\rm Subfind}$"],
+                      [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"], 
+                      [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"]]
+    else:
+        fig_labels = [[r"${\rm Symfind}$", r"${\rm Rockstar}$"],
+                      [r"${\rm Symfind}$", r"${\rm Rockstar}$"],
+                      [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"], 
+                      [r"${\rm High{-}res}$", r"${\rm Low{-}res}$"]]
 
+
+    scale = symlib.scale_factors(suites[0])
+    snap = 235
+    print("Running at snapshot %d, scale %f" % (snap, scale[snap]))
 
     for i_suite in range(len(suites)):
         suite = suites[i_suite]
@@ -960,6 +976,7 @@ def radius_cdf():
             npeaks = []
             rads = []
             r50s = []
+            merger_ratios = []
 
             n_host = 0
             
@@ -970,7 +987,7 @@ def radius_cdf():
 
                 if halo_type == 0:
                     hs[i_host], hists[i_host] = symlib.read_subhalos(sim_dir)
-                    cs[i_host] = symlib.read_cores(sim_dir)
+                    cs[i_host] = symlib.read_cores(sim_dir, suffix=suffix)
                 h, hist, c = hs[i_host], hists[i_host], cs[i_host]
 
                 if halo_type == 0:
@@ -983,20 +1000,32 @@ def radius_cdf():
                 else:
                     assert(0)
 
-                r = np.sqrt(np.sum(x[:,-1,:]**2, axis=1)) / h["rvir"][0,-1]
-                npeak = hist["mpeak_pre"]/mp
+                if SUBFIND_RADIUS_CDF:
+                    r200c = h["rvir"][0,-1] * r200c_to_rvir
+                    r = np.sqrt(np.sum(x[:,-1,:]**2, axis=1)) / r200c
+                    I = np.arange(len(hist), dtype=int)
+                    #macc = h["mvir"][I,hist["first_infall_snap"]]
+                    #npeak = macc/mp
+                    npeak = hist["mpeak_pre"]/mp
 
-                ok[0,-1] = False
-                ok[:,-1] = ok[:,-1] & (hist["mpeak_pre"]/mvir[:,-1] < RAD_LIM)
+                    ok[0,snap] = False
+                else:
+                    r = np.sqrt(np.sum(x[:,snap,:]**2, axis=1)) / h["rvir"][0,snap]
+                    npeak = hist["mpeak_pre"]/mp
 
-                npeaks.append(npeak[ok[:,-1]])
-                rads.append(r[ok[:,-1]])
-                r50s.append(c["r50_bound"][ok[:,-1],-1]/h["rvir"][0,-1])
+                    ok[0,snap] = False
+                    ok[:,snap] = ok[:,snap] & (hist["mpeak_pre"]/mvir[:,snap] < RAD_LIM)
+
+                npeaks.append(npeak[ok[:,snap]])
+                rads.append(r[ok[:,snap]])
+                r50s.append(c["r50_bound"][ok[:,snap],snap]/h["rvir"][0,snap])
+                merger_ratios.append(hist["merger_ratio"][ok[:,snap]])
                 n_host += 1
 
             r = np.hstack(rads)
             npeak = np.hstack(npeaks)
             r50 = np.hstack(r50s)
+            merger_ratio = np.hstack(merger_ratios)
 
             for i_fig in range(len(figs)):
                 fig, ax, rat = figs[i_fig], axes[i_fig], rats[i_fig]
@@ -1008,15 +1037,27 @@ def radius_cdf():
                     if types_to_plot[i_curve] != halo_type: continue
 
                     for i_mult in range(len(npeak_cuts)):
-                        ok = (npeak > npeak_cuts[i_mult][0]) & (r < 1) & (npeak< npeak_cuts[i_mult][1]) & (r > 0)
+                        if SUBFIND_RADIUS_CDF:
+                            ok = (npeak > npeak_cuts[i_mult][0]) & (r < 1) & (npeak< npeak_cuts[i_mult][1]) & (r > 0) & (merger_ratio < 0.1)
+                        else:
+                            ok = (npeak > npeak_cuts[i_mult][0]) & (r < 1) & (npeak< npeak_cuts[i_mult][1]) & (r > 0)
 
+                        if np.sum(ok) == 0: continue
+                        print(i_curve, np.sum(ok), np.quantile(r50[ok], 0.9))
                         size_ok = r[ok] > np.quantile(r50[ok], 0.9)
-                        print(npeak_cuts[i_mult][0])
-                        print(np.quantile(r50[ok], 0.9))
-                        print(np.sum(size_ok), np.sum(ok))
 
                         ls = "-" if i_curve == 0 else "--"
                         color = cut_colors[i_mult]
+
+                        if SUBFIND_RADIUS_CDF and i_curve == 1:
+                            r_plot, m_plot = subfind_profile(
+                                subfind_files[i_mult])
+                            ax.plot(r_plot, m_plot, ls=ls, c=color)
+                            cdf_fit = rct_cdf_fit(r_plot)
+                            rat.plot(r_plot, m_plot/cdf_fit, ls=ls, c=color)
+                            continue
+                        if i_curve == 0 and npeak_cuts[i_mult][0] < 300:
+                            continue
 
                         r_plot = np.sort(r[ok])
                         ax.plot(r_plot[size_ok],
@@ -1029,27 +1070,35 @@ def radius_cdf():
 
     for i_fig in range(len(figs)):
         fig, ax, rat = figs[i_fig], axes[i_fig], rats[i_fig]
-        #fig, ax = figs[i_fig], axes[i_fig]
-        suffix = fig_suffix[i_fig]
+        f_suffix = fig_suffix[i_fig]
 
         curves = [None]*len(npeak_cuts)
         for i_rad in range(len(npeak_cuts)):
             curves[i_rad], = ax.plot([], [], label=cut_labels[i_rad],
                                    c=cut_colors[i_rad])
         if RAD_LIM_NAME is None:
-            alt_legend = ax.legend(curves, cut_labels,
-                                   loc="upper left", fontsize=17)
+            if SUBFIND_RADIUS_CDF:
+                alt_legend = ax.legend(curves, cut_labels,
+                                       loc="upper left", fontsize=15)
+            else:
+                alt_legend = ax.legend(curves, cut_labels,
+                                       loc="upper left", fontsize=17)
         
 
         #rat.plot([0, 1], [1, 1], "--", lw=1.5, c="k")
         l1, = ax.plot([], [], "-", c=pc("a"), label=fig_labels[i_fig][0])
         l2, = ax.plot([], [], "--", c=pc("a"), label=fig_labels[i_fig][1])
-        r_part, m_part = particle_mass_profile()
+        r_part, m_part = particle_mass_profile(r_ratio=r200c_to_rvir)
         l3, = ax.plot(r_part, m_part, ":", c="k",
                       label=r"$M(<r/R_{\rm vir})/M_{\rm vir}$")
         if RAD_LIM_NAME is None:
-            legend = ax.legend([l1, l2, l3], [fig_labels[i_fig][0], fig_labels[i_fig][1], r"$M(<r/R_{\rm vir})/M_{\rm vir}$"],
-                               loc="lower right", fontsize=17)
+            if SUBFIND_RADIUS_CDF:
+                legend = ax.legend([l1, l2, l3], [fig_labels[i_fig][0], fig_labels[i_fig][1], r"$M(<r/R_{\rm 200c})/M_{\rm 200c}$"],
+                                   loc="lower right", fontsize=15)
+
+            else:
+                legend = ax.legend([l1, l2, l3], [fig_labels[i_fig][0], fig_labels[i_fig][1], r"$M(<r/R_{\rm vir})/M_{\rm vir}$"],
+                                   loc="lower right", fontsize=17)
             ax.add_artist(alt_legend)
             rat.set_ylim(0.5, 2.75)
         else:
@@ -1060,17 +1109,48 @@ def radius_cdf():
         #ax.set_xscale("log")
         #ax.set_xlim(1e-2, 1)
         rat.plot([0, 1], [1, 1], "--", c="k", lw=1.5)
-        rat.set_xlabel(r"$r/R_{\rm vir}$")
-        ax.set_ylabel(r"${\rm CDF}(<r/R_{\rm vir})$")
-        rat.set_ylabel(r"${\rm CDF}/{\rm CDF}_{\rm RCT}$")
-    
-        if RAD_LIM_NAME is None:
-            fig.savefig(path.join(OUT_DIR, "radius_cdf_%s.pdf" % suffix))
+        if SUBFIND_RADIUS_CDF:
+            ax.set_ylim(0, 1.2)
+            rat.set_xlabel(r"$r/R_{\rm 200c}$")
+            ax.set_ylabel(r"${\rm CDF}(<r/R_{\rm 200c})$")
+            rat.set_ylabel(r"${\rm CDF}/{\rm CDF}_{\rm RCT}$")
         else:
-            fig.savefig(path.join(OUT_DIR, "radius_cdf_%s_%s.pdf" %
-                                  (suffix, RAD_LIM_NAME)))
+            rat.set_xlabel(r"$r/R_{\rm vir}$")
+            ax.set_ylabel(r"${\rm CDF}(<r/R_{\rm vir})$")
+            rat.set_ylabel(r"${\rm CDF}/{\rm CDF}_{\rm RCT}$")
+    
+        if SUBFIND_RADIUS_CDF:
+            if RAD_LIM_NAME is None:
+                print(path.join(OUT_DIR, "subfind_radius_cdf_%s.pdf" % f_suffix))
+                fig.savefig(path.join(OUT_DIR, "subfind_radius_cdf_%s.pdf" % f_suffix))
+            else:
+                fig.savefig(path.join(OUT_DIR, "subfind_radius_cdf_%s_%s.pdf" %
+                                      (f_suffix, RAD_LIM_NAME)))
+        else:
+            if RAD_LIM_NAME is None:
+                print(path.join(OUT_DIR, "radius_cdf_%s.pdf" % f_suffix))
+                fig.savefig(path.join(OUT_DIR, "radius_cdf_%s.pdf" % f_suffix))
+            else:
+                fig.savefig(path.join(OUT_DIR, "radius_cdf_%s_%s.pdf" %
+                                      (f_suffix, RAD_LIM_NAME)))
 
-def particle_mass_profile(r_vals=None):
+def subfind_profile(file_name):
+    log_r, log_rho = np.loadtxt("tables/%s" % file_name).T
+
+    y1, y2 = log_rho[:-1], log_rho[1:]
+    x1, x2 = log_r[:-1], log_r[1:]
+    a = (y2 - y1)/(x2 - x1)
+    y0 = y1 - a*x1
+
+    rho0 = 10**y0
+    mass = rho0/(3+a)*((10**x2)**(3+a) - (10**x1)**(3+a))
+    mass = np.cumsum(mass)
+
+    f_mass = interpolate.interp1d(x2, np.log10(mass))
+    m200c = 10**f_mass(0)
+    return 10**x2, mass/m200c
+
+def particle_mass_profile(r_vals=None, r_ratio=1.0):
     r_hi, scaled_rho = np.loadtxt("tables/SymphonyMilkyWay_density_profile.txt").T
     rho = scaled_rho/r_hi**2
     
@@ -1082,13 +1162,13 @@ def particle_mass_profile(r_vals=None):
     mass[1:] = vol*rho
     mass = np.cumsum(mass)
 
-    f_mass = interpolate.interp1d(np.log10(r_edge), mass)
+    f_mass = interpolate.interp1d(np.log10(r_edge/r_ratio), mass)
     m_vir = f_mass(0)
 
     if r_vals is None:
-        return r_edge, mass / m_vir
+        return r_edge/r_ratio, mass/m_vir
     else:
-        return r_vals, f_mass(np.log10(r_vals)) / m_vir
+        return r_vals/r_ratio, f_mass(np.log10(r_vals*r_ratio)) / m_vir
 
 def mass_loss():
     print("mass_loss")
@@ -1129,7 +1209,7 @@ def mass_loss():
         sim_dir = symlib.get_host_directory(base_dir, suite, i)
         param = symlib.simulation_parameters(sim_dir)
         h, hist = symlib.read_subhalos(sim_dir)
-        c = symlib.read_cores(sim_dir)
+        c = symlib.read_cores(sim_dir, suffix=suffix)
 
         h_r = np.sqrt(np.sum(h["x"][1:,-1,:]**2, axis=1))
         h_ok = rockstar_ok(h, c, param)[1:,-1]
@@ -1201,7 +1281,7 @@ def mass_loss():
                     rlim_name[i])
 
 def mass_frac_cdf():
-    print("radius_cdf")
+    print("mass_frac_cdf")
     palette.configure(USE_TEX)
 
     base_dir = BASE_DIR
@@ -1234,6 +1314,7 @@ def mass_frac_cdf():
 
     for i_suite in range(len(suites)):
         suite = suites[i_suite]
+
         param = symlib.simulation_parameters(suite)
         mp = param["mp"]/param["h100"]
 
@@ -1253,7 +1334,7 @@ def mass_frac_cdf():
 
                 if halo_type == 0:
                     hs[i_host], hists[i_host] = symlib.read_subhalos(sim_dir)
-                    cs[i_host] = symlib.read_cores(sim_dir)
+                    cs[i_host] = symlib.read_cores(sim_dir, suffix=suffix)
                 h, hist, c = hs[i_host], hists[i_host], cs[i_host]
 
                 if halo_type == 0:
@@ -1333,7 +1414,6 @@ def main():
     #mass_function()
     #mass_function_resolution()
     radius_cdf()
-    #radius_cdf()
     #mass_frac_cdf()
     #stitching_errors()
 

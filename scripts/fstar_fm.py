@@ -7,6 +7,7 @@ import time
 from palette import pc
 import struct
 import numpy.random as random
+import sys
 
 base_dir = "/sdf/home/p/phil1/ZoomIns"
 #base_dir = "/oak/stanford/orgs/kipac"
@@ -120,7 +121,7 @@ def mass_loss_table(sim_dir, gal_halo_model):
             dv = p[i]["v"] - c["v"][i,snap]
 
             E = gravitree.binding_energy(dx, dv, mp, eps[snap],
-                                         n_iter=10, ok=p[i]["ok"])
+                                         n_iter=3, ok=p[i]["ok"])
             is_bound = E <= 0
             star_is_bound = is_bound[p[i]["smooth"]]
             mstar[i,snap] = np.sum(mp_star[i][star_is_bound])
@@ -161,9 +162,12 @@ def read_mass_loss_table(file_name):
     return ok, m_star, rhalf_star, m_dm, rhalf_dm
 
 def main():
-    palette.configure(False)    
-    random.seed(0)
-    
+    palette.configure(False)
+    if len(sys.argv) > 1:
+        target = int(sys.argv[1])
+    else:
+        target = 0
+
     gal_halo_model = symlib.GalaxyHaloModel(
         symlib.UniverseMachineMStarFit(),
         symlib.Jiang2019RHalf(),
@@ -171,24 +175,24 @@ def main():
         symlib.Kirby2013Metallicity(),
         no_scatter=False
     )
+    
+    for host_i in range(symlib.n_hosts(suite)):
+        if host_i != target and target != -1: continue
+        random.seed(host_i)
 
-    sim_dir = symlib.get_host_directory(base_dir, suite, 0)
-    ok, m_star, rhalf_star, m_dm, rhalf_dm = mass_loss_table(
-        sim_dir, gal_halo_model)
-    print(m_star[14][ok[14]])
-    print(m_dm[14][ok[14]])
-    print(rhalf_star[14][ok[14]])
-    print(rhalf_dm[14][ok[14]])
+        print(host_i)
+        continue
 
-    file_name = "tables/example_mass_loss_0.dat"
-    write_mass_loss_table(file_name, ok, m_star, rhalf_star, m_dm, rhalf_dm)
-    ok, m_star, rhalf_star, m_dm, rhalf_dm = read_mass_loss_table(file_name)
-    print()
-    print(m_star[14][ok[14]])
-    print(m_dm[14][ok[14]])
-    print(rhalf_star[14][ok[14]])
-    print(rhalf_dm[14][ok[14]])
+        sim_dir = symlib.get_host_directory(base_dir, suite, host_i)
+        ok, m_star, rhalf_star, m_dm, rhalf_dm = mass_loss_table(
+            sim_dir, gal_halo_model)
 
+        if suite == "SymphonyMilkyWay":
+            file_name = "/sdf/group/kipac/g/cosmo/ki21/phil1/data/fstar_fm_tables/mass_loss_%02d.dat" % host_i
+        elif suite == "SymphonyMilkyWayHR":
+            file_name = "/sdf/group/kipac/g/cosmo/ki21/phil1/data/fstar_fm_tables/mass_loss_hr_%02d.dat" % host_i
+        write_mass_loss_table(file_name, ok, m_star, rhalf_star, m_dm, rhalf_dm)
+        ok, m_star, rhalf_star, m_dm, rhalf_dm = read_mass_loss_table(file_name)
 
 
 
