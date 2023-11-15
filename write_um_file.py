@@ -70,6 +70,7 @@ def get_um_data(sim_dir):
         already_used = np.zeros(len(id), dtype=bool)
         
         target_ids = get_target_ids(h, snap, first_snap, next_id, is_err)
+        print(target_ids)
         idx = np.ones(len(target_ids), dtype=np.int64)*-1
         for i_sub in range(len(h)):
             if target_ids[i_sub] == -1: continue
@@ -77,7 +78,7 @@ def get_um_data(sim_dir):
             if id[idx[i_sub]] != target_ids[i_sub]:
                 idx[i_sub] = -1
                 is_err[i_sub] = True
-                print("        Error at sub %d, snap %d" % (i_sub, snap))
+                #print("        Error at sub %d, snap %d" % (i_sub, snap))
             elif already_used[idx[i_sub]]:
                 idx[i_sub] = -1
                 is_err[i_sub] = False
@@ -88,6 +89,7 @@ def get_um_data(sim_dir):
                 next_id[i_sub] = -1
 
         ok = idx > 0
+        print(np.sum(ok & h["ok"][:,snap]), np.sum((~ok) & h["ok"][:,snap]))
         um["m_star"][ok,snap] = mstar[idx[ok]]
         um["m_icl"][ok,snap] = micl[idx[ok]]
         um["sfr"][ok,snap] = sfr[idx[ok]]
@@ -105,6 +107,8 @@ def get_um_data(sim_dir):
         um["x"][:,snap] -= h_cmov["x"][0, snap]
         um["v"][:,snap] -= h_cmov["v"][0, snap]
         um["x"][:,snap] *= a[snap]
+
+        if snap == 0: exit(1)
     return um
 
 def main():
@@ -113,7 +117,7 @@ def main():
 
     sim_dirs = convert_core_catalogue.get_sim_dirs(config_name)
     n_host = len(sim_dirs)
-
+    
     for i_host in range(n_host):
         if target_idx == -1 or i_host == target_idx:
             um = get_um_data(sim_dirs[i_host])

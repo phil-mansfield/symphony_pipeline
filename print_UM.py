@@ -76,7 +76,6 @@ def main():
             os.mkdir(um_dir)
         out_names = [path.join(um_dir, "um_%d.txt" % i) for i in
                      range(len(a))]
-
         for i in range(len(a)):
             os.system("%s %s %s > %s" % (print_sm_catalog, names[i],
                                          um_cfg_file, out_names[i]))

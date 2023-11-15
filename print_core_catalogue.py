@@ -118,6 +118,8 @@ def print_halo(config_name, target_idx, flags):
     cosmo = cosmology.setCosmology("", symlib.colossus_parameters(param))
     h = symlib.set_units_halos(h_cmov, scale, param)
 
+    print(h.shape)
+
     targets = np.arange(1, len(h), dtype=int)
     
     tracks = [None]*len(h)
@@ -177,7 +179,7 @@ def print_halo(config_name, target_idx, flags):
             if np.sum(sd.ok[i_sub][voters]) < VOTING_NP: continue
 
             print("   ", i_sub)
-
+            
             if tracks[i_sub] is None:
                 tracks[i_sub] = sh.SubhaloTrack(
                     i_sub, sd, sd.infall_cores[i_sub][:VOTING_NP],

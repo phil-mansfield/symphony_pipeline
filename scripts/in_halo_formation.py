@@ -112,8 +112,8 @@ def main():
     ax.set_xlim(1, 1e4)
     ax.legend(loc="upper right", fontsize=17)
     ax.set_xscale("log")
-    ax.set_ylabel(r"$f_{\rm error,RS,leaf}(> N_{\rm peak})$")
-    ax.set_xlabel(r"$N_{\rm peak}$")
+    ax.set_ylabel(r"$f_{\rm err}(> n_{\rm peak})$")
+    ax.set_xlabel(r"$n_{\rm peak}$")
     if len(suites) > 1:
         fig.savefig("../plots/core_tracking/in_halo_frac.pdf")
     else:
@@ -122,8 +122,8 @@ def main():
     ylo, yhi = ax_many.set_ylim(0, None)
     ax_many.set_xlim(1, 1e4)
     ax_many.set_xscale("log")
-    ax_many.set_ylabel(r"$f_{\rm error,RS,leaf}(> N_{\rm peak})$")
-    ax_many.set_xlabel(r"$N_{\rm peak}$")
+    ax_many.set_ylabel(r"$f_{\rm err}(> n_{\rm peak})$")
+    ax_many.set_xlabel(r"$n_{\rm peak}$")
     if len(suites) > 1:
         fig_many.savefig("../plots/core_tracking/in_halo_frac_all.pdf")
     else:

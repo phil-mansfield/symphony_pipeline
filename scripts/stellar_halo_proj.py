@@ -7,7 +7,7 @@ FE_H_HIGH = -0.5
 
 try:
     import palette
-    palette.configure(True)
+    palette.configure(False)
 except:
     pass
 
@@ -45,7 +45,8 @@ def final_radii(sim_dir, part_info, target_subs=None):
         # Correct the units. There's an analogous function for velocities.
         x_i = symlib.set_units_x(x, h_cmov[0,-1], scale[-1], param)
 
-        r_host = np.sqrt(np.sum(x_i**2, axis=1))
+        #r_host = np.sqrt(np.sum(x_i**2, axis=1))
+        r_host = np.sqrt(x_i[:,0]**2 + x_i[:,1]**2)
         rf[i] = np.ones(len(ok))*-1
         rf[i][ok] = r_host[ok]
         
@@ -72,7 +73,7 @@ def density_profile(sim_dir, r_bins, r, mp_star, in_halo,
 
     r_host = h["rvir"][0,-1]
     r_bins = r_bins*r_host # Locally, we'll convert out fo normalized units
-    V_bins = (r_bins[1:]**3 - r_bins[:-1]**3)*4*np.pi/3
+    A_bins = (r_bins[1:]**2 - r_bins[:-1]**2)*np.pi
 
     n_bins = len(r_bins) - 1
     mass_hist = np.zeros(n_bins)
@@ -87,7 +88,7 @@ def density_profile(sim_dir, r_bins, r, mp_star, in_halo,
         m, _ = np.histogram(r[i][ok], bins=r_bins, weights=mp_star[i][ok])
         mass_hist += m
 
-    return mass_hist / V_bins
+    return mass_hist / A_bins
 
 def weighted_mean_profile(sim_dir, r_bins, r, mp_star, x,
                           in_halo, include_sub,
@@ -127,9 +128,9 @@ def weighted_mean_profile(sim_dir, r_bins, r, mp_star, x,
 def main():
     #base_dir = "/oak/stanford/orgs/kipac/users/phil1/simulations/ZoomIns/"
     base_dir = "/sdf/home/p/phil1/ZoomIns"
-    #suite = "SymphonyMilkyWay"
+    suite = "SymphonyMilkyWay"
     #suite = "MWest"
-    suite = "SymphonyLMC"
+    #suite = "SymphonyGroup"
 
     param = symlib.simulation_parameters(suite)
     n_hosts = symlib.n_hosts(suite)
@@ -262,14 +263,14 @@ def main():
              label=r"$M_{\rm sub,infall}/M_{\rm host,infall} \leq 0.15$")
     ax.plot(r_mid, med_rho_high_mass + med_rho_low_mass, c="k")
     ax.set_xlabel(r"$r/R_{\rm vir}$")
-    ax.set_ylabel(r"$\rho\ (M_\odot\,{\rm kpc}^{-3})$")
+    ax.set_ylabel(r"$\rho\ (M_\odot\,{\rm kpc}^{-2})$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_ylim(1e-4, None)
     ax.legend(loc="upper right", fontsize=17)
 
-    print("../plots/stellar_halo/average_density_%s.png" % suite)
-    fig.savefig("../plots/stellar_halo/average_density_%s.png" % suite)
+    print("../plots/stellar_halo/average_density_%s_proj.png" % suite)
+    fig.savefig("../plots/stellar_halo/average_density_%s_proj.png" % suite)
 
     fig, ax = plt.subplots()
     r_mid = np.sqrt(r_bins[1:]*r_bins[:-1])
@@ -292,14 +293,14 @@ def main():
 
     ax.plot(r_mid, med_rho_high_mass + med_rho_low_mass, "--", c="k")
     ax.set_xlabel(r"$r/R_{\rm vir}$")
-    ax.set_ylabel(r"$\rho\ (M_\odot\,{\rm kpc}^{-3})$")
+    ax.set_ylabel(r"$\rho\ (M_\odot\,{\rm kpc}^{-2})$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_ylim(1e-4, None)
     ax.legend(loc="upper right", fontsize=17)
 
-    print("../plots/stellar_halo/Fe_H_density_%s.png" % suite)
-    fig.savefig("../plots/stellar_halo/Fe_H_density_%s.png" % suite)
+    print("../plots/stellar_halo/Fe_H_density_%s_proj.png" % suite)
+    fig.savefig("../plots/stellar_halo/Fe_H_density_%s_proj.png" % suite)
 
     fig, ax = plt.subplots()
     r_mid = np.sqrt(r_bins[1:]*r_bins[:-1])
@@ -319,29 +320,25 @@ def main():
 
     ok = (med_rho_high_mass > rho_cut) & (~np.isinf(med_Fe_H_high_mass))
     ax.plot(r_mid[ok], med_Fe_H_high_mass[ok], c="tab:red",
-            #label=r"$M_{\rm sub,infall}/M_{\rm host,infall} > 0.15$")
-            label=r"{\rm stars\ from\ 'major'\ mergers}")
+             label=r"$M_{\rm sub,infall}/M_{\rm host,infall} > 0.15$")
     ok = (med_rho_low_mass > rho_cut) & (~np.isinf(med_Fe_H_low_mass))
     ax.plot(r_mid[ok], med_Fe_H_low_mass[ok], c="tab:blue",
-            label=r"{\rm stars\ from\ 'minor'\ mergers}")
-             #label=r"$M_{\rm sub,infall}/M_{\rm host,infall} \leq 0.15$")
+             label=r"$M_{\rm sub,infall}/M_{\rm host,infall} \leq 0.15$")
 
     total_rho = med_rho_low_mass + med_rho_high_mass
     ok = (total_rho > rho_cut) & (~np.isinf(med_Fe_H_low_mass)) & (~np.isinf(med_Fe_H_high_mass))
     mean_Fe_H = (med_rho_high_mass[ok]*med_Fe_H_high_mass[ok] + 
                  med_rho_low_mass[ok]*med_Fe_H_low_mass[ok]) / total_rho[ok]
-    ax.plot(r_mid[ok], mean_Fe_H, c="k",
-            label=r"${\rm all\ stars}$")
-    ax.set_xlabel(r"$r/R_{\rm halo}$")
-    #ax.set_ylabel(r"$\langle[{\rm Fe/H}]\rangle$")
-    ax.set_ylabel(r"$\log_{10({\rm iron\ fraction/the\ Sun's\ iron\ fraction)}}$")
+    ax.plot(r_mid[ok], mean_Fe_H, c="k")
+    ax.set_xlabel(r"$r/R_{\rm vir}$")
+    ax.set_ylabel(r"$\langle[{\rm Fe/H}]\rangle$")
     ax.set_xscale("log")
     ax.legend(loc="upper right", fontsize=17)
     ylo, yhi = plt.ylim()
     plt.ylim(ylo, yhi + 0.15*(yhi - ylo))
 
-    print("../plots/stellar_halo/average_Fe_H_%s.png" % suite)
-    fig.savefig("../plots/stellar_halo/average_Fe_H_%s.png" % suite)
+    print("../plots/stellar_halo/average_Fe_H_%s_proj.png" % suite)
+    fig.savefig("../plots/stellar_halo/average_Fe_H_%s_proj.png" % suite)
 
     fig, ax = plt.subplots()
 
@@ -361,7 +358,7 @@ def main():
     ax.set_yscale("log")
     ax.set_ylim(1e4, None)
 
-    print("../plots/stellar_halo/star_contribution_cdf_%s.png" % suite)
-    fig.savefig("../plots/stellar_halo/star_contribution_cdf_%s.png" % suite)
+    print("../plots/stellar_halo/star_contribution_cdf_%s_proj.png" % suite)
+    fig.savefig("../plots/stellar_halo/star_contribution_cdf_%s_proj.png" % suite)
 
 if __name__ == "__main__": main()
