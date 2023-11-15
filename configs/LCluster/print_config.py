@@ -33,22 +33,26 @@ data_product_dir = "/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns/Symp
 
 tree_style = "ct_rvmax"
 
-fmt_string = "%%d %%d %s %s %d %s %s %s %s nil" % (
+um_fmt = "/sdf/group/kipac/u/ollienad/L-Cluster_zoomins/%s/cdm_output/rockstar_ethan/groupcat/sfr_catalog_%%s.txt"
+
+fmt_string = "%%d %%d %s %s %d %s %s %s %s %s" % (
     eps, mp, num_snapshot_files, 
     snapshot_format, tree_dir,
-    data_product_dir, tree_style
+    data_product_dir, tree_style,
+    um_fmt
 )
 
-fmt_string_2 = "%%d %%d %s %s %d %s %s %s %s nil" % (
+fmt_string_2 = "%%d %%d %s %s %d %s %s %s %s %s" % (
     eps, mp, num_snapshot_files, 
     snapshot_format_2, tree_dir,
-    data_product_dir, tree_style
+    data_product_dir, tree_style,
+    um_fmt
 )
 
 for i in range(len(haloes)):
     h = haloes[i]
     #print(fmt_string)
     if path.exists((snapshot_format % h) % (0, 0)):
-        print(fmt_string % (halo_ids[i], halo_snaps[i], h, h, h))
+        print(fmt_string % (halo_ids[i], halo_snaps[i], h, h, h, h))
     else:
-        print(fmt_string_2 % (halo_ids[i], halo_snaps[i], h, h, h))
+        print(fmt_string_2 % (halo_ids[i], halo_snaps[i], h, h, h, h))
