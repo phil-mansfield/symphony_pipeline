@@ -195,7 +195,7 @@ func ConvertTreeFile(treeName, outName string, cfg *lib.Config, cfgi int) {
 	if err != nil { panic(err.Error()) }
 	defer f.Close()
 	
-	order := ConvertInts(rd, f, cfg.TreeStyle[cfgi])
+	order := ConvertInts(rd, f, cfg.TreeStyle[cfgi], cfg.MaxSnap[cfgi])
 	runtime.GC()
 	ConvertFloats(rd, f, cfg.TreeStyle[cfgi], order)
 	runtime.GC()
@@ -203,7 +203,7 @@ func ConvertTreeFile(treeName, outName string, cfg *lib.Config, cfgi int) {
 	runtime.GC()
 }
 
-func ConvertInts(rd catio.Reader, f *os.File, treeStyle string) []int32 {
+func ConvertInts(rd catio.Reader, f *os.File, treeStyle string, maxSnap int32) []int32 {
 	// Read the columns
 	colIdxs := []int{ DFIDCol }
 	colIdxs = append(colIdxs, IntCols...)
@@ -222,12 +222,29 @@ func ConvertInts(rd catio.Reader, f *os.File, treeStyle string) []int32 {
 	buf := dfid
 	byteOrder := binary.LittleEndian
 	for i := range cols {
+		if colIdxs[i] == 31 {
+			// Fix the range of snapshot indices in consistent-trees
+			maxSnapIdx := IntMax(cols[i])
+			deltaSnap := int(maxSnap) - maxSnapIdx
+			for j := range cols[i] {
+				cols[i][j] += deltaSnap
+			}
+		}
+
 		ReorderToInt32(cols[i], order, buf)
 		err := binary.Write(f, byteOrder, buf)
 		if err != nil { panic(err.Error()) }
 	}
 
 	return order
+}
+
+func IntMax(x []int) int {
+	max := x[0]
+	for i := 1; i < len(x); i++ {
+		if x[i] > max { max = x[i] }
+	}
+	return max
 }
 
 func CreateTreeHeader(n int) *lib.TreeHeader {

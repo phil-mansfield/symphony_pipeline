@@ -96,6 +96,8 @@ func TagHalo(cfg *lib.Config, cfgi int) {
 		tags.AddChangedParticles(idxList, snapList, snap)
 		t5 := time.Now()
 		
+		fmt.Printf("%d\n", len(tags.ID[10]))
+
 		dt4 += t5.Sub(t4)
 		runtime.GC()
 	}

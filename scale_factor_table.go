@@ -33,9 +33,8 @@ func main() {
 func ScaleFactorTable(cfg *lib.Config, cfgi int) {
 	fmt.Println(cfgi)
 	baseDir, snapFmt := cfg.BaseDir[cfgi], cfg.SnapFormat[cfgi]
-	mergers := lib.ReadMergers(lib.MergerFileName(baseDir))
 
-	maxSnap := len(mergers.Rvir[0]) - 1
+	maxSnap := int(cfg.MaxSnap[cfgi])
 
 	outFile := path.Join(baseDir, "halos", "snap_scale.dat")
 
