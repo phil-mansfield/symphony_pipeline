@@ -22,7 +22,42 @@ models = {
         symlib.PlummerProfile(),
         symlib.Kirby2013Metallicity(),
         no_scatter=False
-    )
+    ),
+    "r=0.005": symlib.GalaxyHaloModel(
+        symlib.UniverseMachineMStarFit(),
+        symlib.FixedRHalf(0.005),
+        symlib.PlummerProfile(),
+        symlib.Kirby2013Metallicity(),
+        no_scatter=False
+    ),
+    "r=0.008": symlib.GalaxyHaloModel(
+        symlib.UniverseMachineMStarFit(),
+        symlib.FixedRHalf(0.008),
+        symlib.PlummerProfile(),
+        symlib.Kirby2013Metallicity(),
+        no_scatter=False
+    ),
+    "r=0.015": symlib.GalaxyHaloModel(
+        symlib.UniverseMachineMStarFit(),
+        symlib.FixedRHalf(0.015),
+        symlib.PlummerProfile(),
+        symlib.Kirby2013Metallicity(),
+        no_scatter=False
+    ),
+    "r=0.025": symlib.GalaxyHaloModel(
+        symlib.UniverseMachineMStarFit(),
+        symlib.FixedRHalf(0.025),
+        symlib.PlummerProfile(),
+        symlib.Kirby2013Metallicity(),
+        no_scatter=False
+    ),
+    "r=0.05": symlib.GalaxyHaloModel(
+        symlib.UniverseMachineMStarFit(),
+        symlib.FixedRHalf(0.05),
+        symlib.PlummerProfile(),
+        symlib.Kirby2013Metallicity(),
+        no_scatter=False
+    ),
 }
 
 model_names = sorted(models.keys())
@@ -147,8 +182,8 @@ def galaxy_catalog(sim_dir, i_host, model_name):
         )
 
         m, npeak = sf["m"][:,snap], hist["mpeak"]/mp
-        m23_m_conv[:,snap] = m > get_m23_v_conv_lim(npeak)
-        m23_v_conv[:,snap] = m / get_m23_v_conv_lim(8*npeak)
+        m23_m_conv[:,snap] = m > get_m23_v_conv_lim(8*npeak)*mp
+        m23_v_conv[:,snap] = m > get_m23_v_conv_lim(npeak)*mp
 
         for i in range(1, len(sf)):
             if not sf["ok"][i,snap]: continue
