@@ -48,13 +48,25 @@ func XV(cfg *lib.Config, cfgi int) {
 	fileName := fmt.Sprintf(snapFmt, maxSnap, 0)
 	header := lib.OpenGadget2Zoom(fileName, []string{"x", "v", "id32"})
 
+	for snap := 0; snap <= maxSnap; snap++ {
+		fName := fmt.Sprintf(snapFmt, snap, 0)
+		f := lib.OpenGadget2Zoom(fName, []string{"x", "v", "id32"})
+		fmt.Printf("%3d -> %d\n", snap, f.NTot)
+		fmt.Println(fName)
+	}
+
+	fmt.Println(header.NTot[HRLevel])
+
 	x := make([][3]float32, header.NTot[HRLevel])
 	v := make([][3]float32, header.NTot[HRLevel])
-	
+
 	pHeader := lib.ReadParticleHeader(cfg.BaseDir[cfgi])
 
 	tags := lib.ReadTags(cfg.BaseDir[cfgi], pHeader)
-	
+
+	//fmt.Printf("%d\n", len(tags.ID[10]))
+	//panic("")
+
 	xh := NewHaloVector(tags)
 	vh := NewHaloVector(tags)
 
@@ -65,6 +77,12 @@ func XV(cfg *lib.Config, cfgi int) {
 
 		ClearVectors(x)
 		ClearVectors(v)
+
+		fileNames := make([]string, cfg.Blocks[cfgi])
+		for b := range fileNames {
+			fileNames[b] = fmt.Sprintf(snapFmt, snap, b)
+		}
+		//CheckIDs(fileNames)
 
 		for b := 0; b < cfg.Blocks[cfgi]; b++ {
 			fileName := fmt.Sprintf(snapFmt, snap, b)
@@ -77,7 +95,7 @@ func XV(cfg *lib.Config, cfgi int) {
 
 		FillHaloVector(tags, x, xh, snap)
 		FillHaloVector(tags, v, vh, snap)
-
+	
 		lib.WriteVector(pHeader, cfg.BaseDir[cfgi], "x", snap, xh)
 		lib.WriteVector(pHeader, cfg.BaseDir[cfgi], "v", snap, vh)
 
@@ -95,6 +113,61 @@ func CountFiles(pHeader *lib.ParticleHeader) int {
 	return int(max)
 }
 
+func CheckIDs(fileNames []string) {
+	f := lib.OpenGadget2Zoom(fileNames[0], []string{"x", "v", "id32"})
+	
+	found := make([]int, f.NTot[HRLevel])
+	extras := []int32{ }
+	blocks := []int{ }
+	idxs := []int{ }
+
+	fmt.Printf("NTot = %d\n", f.NTot[HRLevel])
+
+	for b := range fileNames {
+		f = lib.OpenGadget2Zoom(fileNames[b], []string{"x", "v", "id32"})
+		fmt.Printf("%d\n", f.NTot[HRLevel])
+		idp := make([]int32, f.N[HRLevel])
+		f.Read("id32", HRLevel, idp)
+
+
+		min, max := idp[0], idp[0]
+		for i := range idp {
+			if idp[i] >= 0 && idp[i] < int32(len(found)) {
+				found[idp[i]]++
+			} else {
+				extras = append(extras, idp[i])
+				blocks = append(blocks, b)
+				idxs = append(idxs, i)
+			}
+
+			if idp[i] < min { min = idp[i] }
+			if idp[i] > max { max = idp[i] }
+		}
+		fmt.Printf("%d) min = %8d max = %8d\n", b, min, max)
+	}
+
+
+	j := 0
+	for i := range found {
+		if found[i] == 0 {
+			j++
+			fmt.Printf("Missing: %d\n", i)
+		} else if found[i] > 1 {
+			j++
+			fmt.Printf("Multi: %d (%d)\n", i, found[i])
+		}
+	}
+	if j != 0 {
+		fmt.Printf("%d errors found\n", j)
+	} else {
+		fmt.Printf("All IDs found once\n")
+	}
+
+	fmt.Printf("Extra IDs: %d\n", extras)
+	fmt.Printf("Blocks: %d\n", blocks)
+	fmt.Printf("Indices: %d\n", idxs)
+}
+
 func ReadToIDGrid(fileName string, x, v [][3]float32) {
 	f := lib.OpenGadget2Zoom(fileName, []string{"x", "v", "id32"})
 	
@@ -104,7 +177,11 @@ func ReadToIDGrid(fileName string, x, v [][3]float32) {
 	f.Read("x", HRLevel, xp)
 	f.Read("id32", HRLevel, idp)
 
+	//fmt.Println(fileName)
 	for i := range xp {
+		//if idp[i] >= int32(len(x)) {
+		//	fmt.Printf("|x| = %d, idp[%d] = %d\n", len(x), i, idp[i])
+		//}
 		x[idp[i]] = xp[i]
 	}
 
@@ -148,7 +225,7 @@ func FillHaloVector(tags *lib.Tags, x [][3]float32,
 	for i := range xh {
 		xh[i] = xh[i][:cap(xh[i])]
 		for j := range xh[i] {
-			xh[i][j] = x[tags.ID[i][j] - 1]
+			xh[i][j] = x[tags.ID[i][j]]
 		}
 
 		xh[i] = tags.TrimVector(i, xh[i], snap)

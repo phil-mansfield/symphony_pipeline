@@ -7,7 +7,7 @@ FE_H_HIGH = -0.5
 
 try:
     import palette
-    palette.configure(False)
+    palette.configure(True)
 except:
     pass
 
@@ -125,9 +125,11 @@ def weighted_mean_profile(sim_dir, r_bins, r, mp_star, x,
 
 
 def main():
-    base_dir = "/oak/stanford/orgs/kipac/users/phil1/simulations/ZoomIns/"
+    #base_dir = "/oak/stanford/orgs/kipac/users/phil1/simulations/ZoomIns/"
+    base_dir = "/sdf/home/p/phil1/ZoomIns"
     #suite = "SymphonyMilkyWay"
-    suite = "MWest"
+    #suite = "MWest"
+    suite = "SymphonyLMC"
 
     param = symlib.simulation_parameters(suite)
     n_hosts = symlib.n_hosts(suite)
@@ -145,7 +147,7 @@ def main():
 
     # Our galaxy-halo model
     gal_halo = symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
+        symlib.UniverseMachineMStar(),
         symlib.Jiang2019RHalf(),
         symlib.PlummerProfile(),
         symlib.Kirby2013Metallicity(),
@@ -158,6 +160,7 @@ def main():
     mpeak_sub = []
     n_hosts_used = 0
     for i in range(n_hosts):
+        if i == 32 and suite == "SymphonyLCluster": continue
         print("Host %2d/%d" % (i, n_hosts))
 
         # This function lets you loop over all the subhalo directories without
@@ -265,6 +268,7 @@ def main():
     ax.set_ylim(1e-4, None)
     ax.legend(loc="upper right", fontsize=17)
 
+    print("../plots/stellar_halo/average_density_%s.png" % suite)
     fig.savefig("../plots/stellar_halo/average_density_%s.png" % suite)
 
     fig, ax = plt.subplots()
@@ -294,6 +298,7 @@ def main():
     ax.set_ylim(1e-4, None)
     ax.legend(loc="upper right", fontsize=17)
 
+    print("../plots/stellar_halo/Fe_H_density_%s.png" % suite)
     fig.savefig("../plots/stellar_halo/Fe_H_density_%s.png" % suite)
 
     fig, ax = plt.subplots()
@@ -314,22 +319,28 @@ def main():
 
     ok = (med_rho_high_mass > rho_cut) & (~np.isinf(med_Fe_H_high_mass))
     ax.plot(r_mid[ok], med_Fe_H_high_mass[ok], c="tab:red",
-             label=r"$M_{\rm sub,infall}/M_{\rm host,infall} > 0.15$")
+            #label=r"$M_{\rm sub,infall}/M_{\rm host,infall} > 0.15$")
+            label=r"{\rm stars\ from\ 'major'\ mergers}")
     ok = (med_rho_low_mass > rho_cut) & (~np.isinf(med_Fe_H_low_mass))
     ax.plot(r_mid[ok], med_Fe_H_low_mass[ok], c="tab:blue",
-             label=r"$M_{\rm sub,infall}/M_{\rm host,infall} \leq 0.15$")
+            label=r"{\rm stars\ from\ 'minor'\ mergers}")
+             #label=r"$M_{\rm sub,infall}/M_{\rm host,infall} \leq 0.15$")
 
     total_rho = med_rho_low_mass + med_rho_high_mass
     ok = (total_rho > rho_cut) & (~np.isinf(med_Fe_H_low_mass)) & (~np.isinf(med_Fe_H_high_mass))
     mean_Fe_H = (med_rho_high_mass[ok]*med_Fe_H_high_mass[ok] + 
                  med_rho_low_mass[ok]*med_Fe_H_low_mass[ok]) / total_rho[ok]
-    ax.plot(r_mid[ok], mean_Fe_H, c="k")
-    ax.set_xlabel(r"$r/R_{\rm vir}$")
-    ax.set_ylabel(r"$\langle[{\rm Fe/H}]\rangle$")
+    ax.plot(r_mid[ok], mean_Fe_H, c="k",
+            label=r"${\rm all\ stars}$")
+    ax.set_xlabel(r"$r/R_{\rm halo}$")
+    #ax.set_ylabel(r"$\langle[{\rm Fe/H}]\rangle$")
+    ax.set_ylabel(r"$\log_{10({\rm iron\ fraction/the\ Sun's\ iron\ fraction)}}$")
     ax.set_xscale("log")
     ax.legend(loc="upper right", fontsize=17)
     ylo, yhi = plt.ylim()
     plt.ylim(ylo, yhi + 0.15*(yhi - ylo))
+
+    print("../plots/stellar_halo/average_Fe_H_%s.png" % suite)
     fig.savefig("../plots/stellar_halo/average_Fe_H_%s.png" % suite)
 
     fig, ax = plt.subplots()
@@ -350,6 +361,7 @@ def main():
     ax.set_yscale("log")
     ax.set_ylim(1e4, None)
 
+    print("../plots/stellar_halo/star_contribution_cdf_%s.png" % suite)
     fig.savefig("../plots/stellar_halo/star_contribution_cdf_%s.png" % suite)
 
 if __name__ == "__main__": main()

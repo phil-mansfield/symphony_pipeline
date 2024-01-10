@@ -31,7 +31,7 @@ func main() {
 	inputName := os.Args[1]
 	
 	cfg := lib.ParseConfig(inputName)
-
+	
 	for i := range cfg.BaseDir {
 		if haloIndex != -1 && haloIndex !=  i { continue }
 		
@@ -53,12 +53,16 @@ func main() {
 		n := lib.TreeNTot(files)
 		mvir := make([]float32, n)
 		lib.ReadTreeVarFullFloat(files, "Mvir", mvir)
+		snap := make([]int32, n)
+		lib.ReadTreeVarFullInt(files, "Snap", snap)
 
 		log.Printf("Mpeak cutoff: %g", cfg.Mp[i]*NPeakMin)
 		
-		mpeak := Mpeak(b, mvir)
+		//mpeak := Mpeak(b, mvir)
+		mpeakPre := MpeakPre(b, mvir, snap)
 
-		mIdx := FindLargestMergers(b, mpeak, float32(cfg.Mp[i]*NPeakMin))
+
+		mIdx := FindLargestMergers(b, mpeakPre, float32(cfg.Mp[i]*NPeakMin))
 		runtime.GC()
 
 		log.Printf("%d haloes tracked.", len(mIdx))
@@ -173,6 +177,18 @@ func Mpeak(b *lib.Branches, mvir []float32) []float32 {
 	for i := range b.Starts {
 		if !b.IsReal[i] { continue }
 		for j := b.Starts[i]; j < b.Ends[i]; j++ {
+			if mvir[j] > mpeak[i] { mpeak[i] = mvir[j] }
+		}
+	}
+	return mpeak
+}
+
+func MpeakPre(b *lib.Branches, mvir []float32, snap []int32) []float32 {
+	mpeak := make([]float32, b.N)
+	for i := range b.Starts {
+		if !b.IsReal[i] { continue }
+		for j := b.Starts[i]; j < b.Ends[i]; j++ {
+			if snap[j] >= b.PreprocessSnap[i] { continue }
 			if mvir[j] > mpeak[i] { mpeak[i] = mvir[j] }
 		}
 	}

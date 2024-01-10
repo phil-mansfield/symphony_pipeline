@@ -59,7 +59,7 @@ def mass_loss_vars():
         cosmo = cosmology.setCosmology('', symlib.colossus_parameters(param))
         h, hist = symlib.read_subhalos(host_dir)
 
-        c = symlib.read_cores(host_dir)
+        c = symlib.read_cores(host_dir, suffix="fid2")
         scale = symlib.scale_factors(host_dir)
         z = 1/scale - 1
         t = cosmo.age(z)
@@ -81,7 +81,7 @@ def mass_loss_vars():
             r_c = np.sqrt(np.sum(c["x"][i]**2, axis=1))
 
             snap = np.arange(h.shape[1], dtype=int)
-            i_start = hist["merger_snap"][i]
+            i_start = hist["first_infall_snap"][i]
             is_sub_rs = ok2_rs & (snap >= i_start)
 
             is_sub_method = [
@@ -137,7 +137,7 @@ def mass_loss_vars():
         rsub_rhost[i] = np.hstack(rsub_rhost[i])
         lnm_sub[i] = np.hstack(lnm_sub[i])
 
-        ok = (msub_mhost[i] < 0.1) & (msub_mpeak[i] < 1.0) #& (z_sub[i] > 3) & both_exist[i]
+        ok = (msub_mhost[i] < 0.1) & (msub_mpeak[i] < 1.0)
         dm_dt[i] = dm_dt[i][ok]
         z_sub[i] = z_sub[i][ok]
         msub_mhost[i] = msub_mhost[i][ok]
@@ -597,7 +597,7 @@ def indiv_mass_loss():
 
 if __name__ == "__main__":
     palette.configure(True)
-    #mass_loss_vars()
+    mass_loss_vars()
     #mass_loss_msub_mpeak()
-    mass_loss_msub_mpeak_2()
+    #mass_loss_msub_mpeak_2()
     #indiv_mass_loss()

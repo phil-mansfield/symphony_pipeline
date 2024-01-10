@@ -1,5 +1,7 @@
 import os
 
+PRINT_CORRUPTED = False
+
 # Change to the z=0 Plummer-equivalent force softneing scale of the simulation
 # in units of Mpc/h
 eps = "0.00325"
@@ -22,7 +24,7 @@ skipped_snaps = {
     "Halo653": [173],
     "Halo416": [121, 122],
     "Halo419": [127, 128, 129],
-    "Halo429": [126, 126, 127],
+    "Halo429": [125, 126, 127],
     "Halo436": [126, 127, 128, 129],
     "Halo452": [186],
     "Halo462": [95, 105],
@@ -87,9 +89,12 @@ for i in range(len(haloes)):
         continue
 
     snapshot_format = "%s/%s/output_HR/snapshot_%%03d.%%d" % (p_dir, h)
+    um_fmt = "/sdf/group/kipac/u/ycwang/rhapsody_halo/%s/rockstar/groupcat/sfr_catalog_%%s.txt"
 
-    print("%d %d %s %s %d %s %s %s %s nil" % (
+    if not PRINT_CORRUPTED and h in skipped_snaps: continue
+    print("%d %d %s %s %d %s %s %s %s %s" % (
         halo_ids[i], halo_snaps[i], eps, mp,
         num_snapshot_files, snapshot_format,
-        tree_dir, data_product_dir % h, tree_style
+        tree_dir, data_product_dir % h, tree_style,
+        um_fmt % h
     ))

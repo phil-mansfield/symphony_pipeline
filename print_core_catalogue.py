@@ -118,6 +118,8 @@ def print_halo(config_name, target_idx, flags):
     cosmo = cosmology.setCosmology("", symlib.colossus_parameters(param))
     h = symlib.set_units_halos(h_cmov, scale, param)
 
+    print(h.shape)
+
     targets = np.arange(1, len(h), dtype=int)
     
     tracks = [None]*len(h)
@@ -131,6 +133,7 @@ def print_halo(config_name, target_idx, flags):
     starting_snap = np.maximum(hist["first_infall_snap"], min_snap)
     infall_cores = [None]*len(h)
 
+    print("# out_file = %s" % out_file)
     with open(out_file, "a") as fp:
         print_header(sim_dir, file=fp)
         print("""# 0 - snap
@@ -176,7 +179,7 @@ def print_halo(config_name, target_idx, flags):
             if np.sum(sd.ok[i_sub][voters]) < VOTING_NP: continue
 
             print("   ", i_sub)
-
+            
             if tracks[i_sub] is None:
                 tracks[i_sub] = sh.SubhaloTrack(
                     i_sub, sd, sd.infall_cores[i_sub][:VOTING_NP],
@@ -236,7 +239,7 @@ def print_halo(config_name, target_idx, flags):
             f_core_32_rs = np.sum(r_h < r_50_bound_h)/32
 
             with open(out_file, "a") as fp:
-                print(("%d %d "+"%.6f "*3+"%.6f "*3+"%.6f "*3+"%.6g "*3+"%.6g "+"%.6f "+"%.6f "+"%6.f") %
+                print(("%d %d "+"%.6f "*3+"%.6f "*3+"%.6f "*3+"%.6g "*3+"%.6g "+"%.6f "+"%.6f "+"%.6f") %
                       (snap, i_sub, xc[0], xc[1], xc[2], vc[0], vc[1], vc[2],
                        r_tidal, r_50_bound, r_50_bound_h,
                        m_tidal, m_tidal_bound, m_bound,
