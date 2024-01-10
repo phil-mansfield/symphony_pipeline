@@ -23,6 +23,7 @@ func getOmegaM(suiteName string) float64 {
 		"SymphonyLMC": 0.286,
 		"SymphonyMilkyWay": 0.286,
 		"EDEN_MilkyWay_8K": 0.286,
+		"EDEN_MilkyWay_16K": 0.286,
 		"SymphonyMilkyWayDisk": 0.286,
 		"SymphonyMilkyWayDiskDMO": 0.286,
 		"SymphonyMilkyWayHR": 0.286,
