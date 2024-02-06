@@ -8,7 +8,7 @@ Run as python3 file_nonsense.py <mode> <suite> <halo_num>
 
 It can be run in several modes:
 move_trees - move tree files from their old location HaloXYZ/halos to
-             HaloXYZ/tres
+             HaloXYZ/trees
 tar_halos - tar the relevant portions of the halos subdirectory
 tar_trees - tar the trees subdirectory
 tar_particles - tar the particle subdirectory
