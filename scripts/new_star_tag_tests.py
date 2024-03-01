@@ -11,6 +11,7 @@ def old_main():
     palette.configure(False)
 
     base_dir = "/sdf/home/p/phil1/ZoomIns"
+    base_dir = "/oak/stanford/orgs/kipac/users/phil1/simulations/ZoomIns/"
     suite = "SymphonyMilkyWay"
     i_host = 0
     i_sub = 1
@@ -25,11 +26,15 @@ def old_main():
 
     stars, gal_hists, ranks = symlib.tag_stars(
         sim_dir, gal_halo, target_subs=np.array([i_sub]))
+    symlib.retag_stars(
+        sim_dir, gal_halo, ranks, target_subs=np.array([i_sub]))
 
     print("m_{p,star}")
     print(stars[i_sub]["mp"][:30])
     print("[Fe/H]")
     print(stars[i_sub]["Fe_H"][:30])
+    print(np.mean(stars[i_sub]["Fe_H"]))
+    print(np.std(stars[i_sub]["Fe_H"]))
     print("a_form")
     print(stars[i_sub]["a_form"][:30])
     print()
@@ -57,8 +62,8 @@ def old_main():
     plt.savefig("../plots/stellar_halo/Fe_age_relation_%d_%d.png" %
                 (i_host, i_sub))
 
-    um = symlib.read_um(sim_dir)
-    print(um[i_sub]["sfr"])
+    #um = symlib.read_um(sim_dir)
+    #print(um[i_sub]["sfr"])
 
 def main():
     palette.configure(False)

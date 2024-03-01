@@ -110,6 +110,7 @@ class SnapshotData(object):
         self.a = symlib.scale_factors(sim_dir)[snap]
         self.snap = snap
         self.param = param
+        self.n_snap = h_cmov.shape[1]
 
 class SubhaloTrack(object):
     def __init__(self, i_sub, snap_data_init, core, param, k):
@@ -118,7 +119,7 @@ class SubhaloTrack(object):
         self.i_sub = i_sub
 
         snap = snap_data_init.snap
-        n_snap = param["n_snap"]
+        n_snap = snap_data_init.n_snap
         n_core = len(core)
         self.n_core = n_core
         self.snaps = np.arange(n_snap, dtype=int)

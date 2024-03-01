@@ -180,10 +180,11 @@ func StartsEnds(h *Haloes) (starts, ends []int32) {
 }
 
 func FindCentral(h *Haloes, t *Tracks, centralID int32) int {
-	fmt.Println(len(h.ID), len(t.Starts), centralID)
 	for i := range t.Starts {
-		if h.ID[t.Starts[i]] == centralID {
-			return i
+		for j := t.Starts[i]; j < t.Ends[i]; j++ {
+			if h.ID[j] == centralID {
+				return i
+			}
 		}
 	}
 	panic(fmt.Sprintf("Halo with ID %d not found", centralID))
