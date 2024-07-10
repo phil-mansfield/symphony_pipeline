@@ -11,9 +11,18 @@ import os
 import sys
 import struct
 
+""" Note to non-expert reader. This file, as with many pipeline files, predates
+the newest interfaces in symlib. Many funcitons (symlib.read_rocsktar,
+symlib.Particles, etc.) are wrappers around a bunch of deeply annoying
+functions that are called manually here.
+"""
+
+# Number of particles used to vote on subhalo centers. 32 is basically optimal,
+# see Mansfield et al. 2024's Appendices.
 N_CORE = 32
 
 def get_sim_dirs(config_name):
+    """ read the config files to get simulation directories """
     with open(config_name, "r") as fp: text = fp.read()
     lines = [line for line in text.split("\n") if len(line) > 0]
     for i in range(len(lines)):
@@ -21,13 +30,19 @@ def get_sim_dirs(config_name):
     return [line[7] for line in lines]
 
 def parse_sim_dir(sim_dir):
+    """ split a simulation directory up into base, suite, and halo """
     suite_dir, halo = path.split(sim_dir)
     base_dir, suite = path.split(suite_dir)
     return base_dir, suite, halo
 
 def write_infall_cores(sim_dir, idxs):
+    """ write the core indices to a file. First, two 8-byte ints are used
+    for the index array shape (n_halo, N_CORE), then the rest are written
+    as a contiguous array.
+    """
     file_name = path.join(sim_dir, "halos", "infall_cores.dat")
-
+    print("writing to", file_name)
+    
     with open(file_name, "wb") as fp:
         fp.write(struct.pack("qq", idxs.shape[0], idxs.shape[1]))
         idxs = idxs.flatten()
@@ -47,12 +62,19 @@ def main():
         print(suite_name, halo_name)
 
         param = symlib.simulation_parameters(sim_dir)
+        # This is an archaic verison of read_rockstar without the wrapper. All
+        # the wrapper does is removed dumb fields and rename others.
+        #
+        # remove_false_selections doesn't do anything with current catalogs
+        # but can account for some errors if the rockstar catalogs are awful
+        # enough
         h, hist = symlib.read_subhalos(sim_dir, comoving=True,
                                        include_false_selections=True)
         scale = symlib.scale_factors(sim_dir)
 
         h_cmov = np.copy(h)
-        info = symlib.ParticleInfo(sim_dir)
+        # particle data header contained within symlib.Particles
+        info = symlib.ParticleInfo(sim_dir) 
 
         scale = symlib.scale_factors(sim_dir)
         cosmo = cosmology.setCosmology("", symlib.colossus_parameters(param))
@@ -60,6 +82,7 @@ def main():
     
         infall_cores = np.zeros((len(h), N_CORE), dtype=np.int32)
 
+        
         for snap in range(len(scale)):
             if snap not in hist["first_infall_snap"][1:]: continue
             print("  snap %3d" % snap)
