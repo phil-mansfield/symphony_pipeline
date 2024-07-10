@@ -26,15 +26,13 @@ def n_most_bound(xc, vc, x, v, ok, n_core, param, a):
     dx, dv = delta(x, xc), delta(v, vc)
     
     mp, eps = param["mp"]/param["h100"], param["eps"]/param["h100"]*a
-    # We need to do exactly one unbinding pass here because we're only using
-    # smoothly accreted particles.
-    #E_ok = gravitree.binding_energy(dx[ok], dv[ok], mp, eps, n_iter=1)
-    #E = np.inf*np.ones(len(ok))
-    #E[ok] = E_ok
     ke = 0.5*np.sum(dv**2, axis=1)
-    _, vmax, pe_scaled, _ = symlib.profile_info(param, dx, ok=ok)
-    E = ke + pe_scaled*vmax**2
 
+    dx, ke = dx[ok], ke[ok]
+    _, vmax, pe_scaled, _ = symlib.profile_info(param, dx)
+    E = np.ones(len(ok)) * np.inf
+    E[ok] = ke + pe_scaled*vmax**2
+    
     part = np.argpartition(E, n_core)[:n_core]
     part_order = np.argsort(E[part])
 
