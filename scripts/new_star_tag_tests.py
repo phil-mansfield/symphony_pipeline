@@ -11,24 +11,19 @@ def old_main():
     palette.configure(False)
 
     base_dir = "/sdf/home/p/phil1/ZoomIns"
-    base_dir = "/oak/stanford/orgs/kipac/users/phil1/simulations/ZoomIns/"
     suite = "SymphonyMilkyWay"
     i_host = 0
-    i_sub = 1
 
     sim_dir = symlib.get_host_directory(base_dir, suite, i_host)
 
-    scale = symlib.scale_factors(sim_dir)
-    rs, hist = symlib.read_rockstar(sim_dir)
-    sf, _ = symlib.read_symfind(sim_dir)
-
-    gal_halo = symlib.DWARF_GALAXY_HALO_MODEL
+    gal_halo = symlib.DWARF_GALAXY_HALO_MODEL_NO_UM
 
     stars, gal_hists, ranks = symlib.tag_stars(
-        sim_dir, gal_halo, target_subs=np.array([i_sub]))
+        sim_dir, gal_halo)
     symlib.retag_stars(
-        sim_dir, gal_halo, ranks, target_subs=np.array([i_sub]))
+        sim_dir, gal_halo, ranks)
 
+    """
     print("m_{p,star}")
     print(stars[i_sub]["mp"][:30])
     print("[Fe/H]")
@@ -40,6 +35,7 @@ def old_main():
     print()
     print("history")
     print(gal_hists[i_sub])
+    """
 
     print(np.mean(stars[i_sub]["Fe_H"]))
     print(np.std(stars[i_sub]["Fe_H"]))
@@ -59,8 +55,8 @@ def old_main():
     plt.ylabel(r"${\rm [Fe/H]}$")
     plt.xlim(9, 14)
     
-    plt.savefig("../plots/stellar_halo/Fe_age_relation_%d_%d.png" %
-                (i_host, i_sub))
+    #plt.savefig("../plots/stellar_halo/Fe_age_relation_%d_%d.png" %
+    #            (i_host, i_sub))
 
     #um = symlib.read_um(sim_dir)
     #print(um[i_sub]["sfr"])

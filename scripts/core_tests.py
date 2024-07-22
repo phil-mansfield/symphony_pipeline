@@ -1411,9 +1411,9 @@ def main():
     #stitching_errors()
     #mass_loss()
 
-    #mass_function()
+    mass_function()
     #mass_function_resolution()
-    radius_cdf()
+    #radius_cdf()
     #mass_frac_cdf()
     #stitching_errors()
 

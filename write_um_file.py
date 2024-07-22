@@ -49,7 +49,7 @@ def get_um_data(sim_dir):
     first_snap = get_first_snap(h)
     next_id = np.ones(len(h), dtype=np.int64)*-1
     prev_id = np.ones(len(h), dtype=np.int64)*-1
-    is_err = np.zeros(len(h), dtype=np.bool)
+    is_err = np.zeros(len(h), dtype=bool)
 
     print(halo_name)
     for snap in range(len(a)):
@@ -70,6 +70,7 @@ def get_um_data(sim_dir):
         already_used = np.zeros(len(id), dtype=bool)
         
         target_ids = get_target_ids(h, snap, first_snap, next_id, is_err)
+        print("target_ids")
         print(target_ids)
         idx = np.ones(len(target_ids), dtype=np.int64)*-1
         for i_sub in range(len(h)):
@@ -107,8 +108,6 @@ def get_um_data(sim_dir):
         um["x"][:,snap] -= h_cmov["x"][0, snap]
         um["v"][:,snap] -= h_cmov["v"][0, snap]
         um["x"][:,snap] *= a[snap]
-
-        if snap == 0: exit(1)
     return um
 
 def main():

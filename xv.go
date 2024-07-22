@@ -24,7 +24,7 @@ func main() {
 		haloIndex, err = strconv.Atoi(os.Args[2])
 		if err != nil { panic(err.Error()) }
 	}
-
+	
 	inputName := os.Args[1]
 	
 	cfg := lib.ParseConfig(inputName)
@@ -202,10 +202,20 @@ func ClearVectors(x [][3]float32) {
 }
 
 func CheckVectors(x [][3]float32) {
+	nUnset := 0
 	for i := range x {
 		for dim := 0; dim < 3; dim++ {
 			if math.IsNaN(float64(x[i][dim])) {
-				panic(fmt.Sprintf("Vector with ID %d not set.", i + 1))
+				nUnset++
+			}
+		}
+	}
+	
+	for i := range x {
+		for dim := 0; dim < 3; dim++ {
+			if math.IsNaN(float64(x[i][dim])) {
+				panic(fmt.Sprintf("Vector with ID %d not set. %d total " +
+					"vectors unset.", i + 1, nUnset))
 			}
 		}
 	}

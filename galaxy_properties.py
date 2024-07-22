@@ -8,56 +8,50 @@ import sys
 import scipy.signal as signal
 import scipy.special as special
 
+def make_model(use_um, r_name):
+    if r_name == "jiang":
+        radius_model = Jiang2019RHalf()
+    elif len(r_name) > 2 and r_name[:2] == "r=":
+        radius_model = symlib.FixedRHalf(float(r_name[2:]))
+    else:
+        raise ValueError("Unrecognized r_name, %s" % r_name)
+
+    if use_um:
+        m_star_model = symlib.StellarMassModel(
+            symlib.UniverseMachineMStar(),
+            symlib.UniverseMachineSFH()
+        )
+    else:
+        m_star_model = symlib.StellarMassModel(
+            symlib.UniverseMachineMStarFit(),
+            symlib.DarkMatterSFH()
+        )
+    return symlib.GalaxyHaloModel(
+        m_star_model,
+        symlib.ProfileModel(
+            radius_model,
+            symlib.PlummerProfile()
+        ),
+        symlib.MetalModel(
+            symlib.Kirby2013Metallicity(),
+            symlib.Kirby2013MDF(model_type="gaussian"),
+            symlib.FlatFeHProfile(),
+	    symlib.GaussianCoupalaCorrelation()
+        )   
+    )
+
+
 models = {
-    "um": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStar(),
-        symlib.Jiang2019RHalf(),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "um_fit": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.Jiang2019RHalf(),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "r=0.005": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.FixedRHalf(0.005),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "r=0.008": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.FixedRHalf(0.008),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "r=0.015": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.FixedRHalf(0.015),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "r=0.025": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.FixedRHalf(0.025),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
-    "r=0.05": symlib.GalaxyHaloModel(
-        symlib.UniverseMachineMStarFit(),
-        symlib.FixedRHalf(0.05),
-        symlib.PlummerProfile(),
-        symlib.Kirby2013Metallicity(),
-        no_scatter=False
-    ),
+    "um": make_model(True, "jiang"),
+    "um_fit": make_model(False, "jiang"),
+    "r=0.005": make_model(False, "r=0.005")
+    "r=0.008": make_model(False, "r=0.008"),
+    "r=0.015": make_model(False, "r=0.015"),
+    "r=0.025": make_model(False, "r=0.025"),
+    "r=0.05": make_model(False, "r=0.05"),
+    "r=0.1": make_model(False, "r=0.1"),
+    "r=0.2": make_model(False, "r=0.2"),
+    "r=0.4": make_model(False, "r=0.4")
 }
 
 model_names = sorted(models.keys())
@@ -129,8 +123,9 @@ def get_m23_v_conv_lim(npeak):
     b2, b1, b0 = -0.01853, 0.3861, 1.6597
     return 10**(x*x*b2 + x*b1 + b0)
     
-def galaxy_catalog(sim_dir, i_host, model_name):
-    print(sim_dir, i_host, model_name)
+def galaxy_catalog(sim_dir, i_host, model_names):
+
+    n_model
 
     gal_dir = os.path.join(sim_dir, "galaxies")
     if not os.path.exists(gal_dir):
@@ -255,7 +250,9 @@ def galaxy_catalog(sim_dir, i_host, model_name):
         sf["ok"].tofile(fp)
 
 def main():
-    config_name, idx_str, model_name = sys.argv[1], sys.argv[2], sys.argv[3]
+    config_name, idx_str, model_names = sys.argv[1], sys.argv[2], sys.argv[3:]
+    print("Running models %s on config %s, galaxy %d" %
+          (model_names, config_name, idx_str))
     target_idx = int(idx_str)
 
     sim_dirs = convert_core_catalogue.get_sim_dirs(config_name)
@@ -263,6 +260,6 @@ def main():
     
     for i_host in range(n_host):
         if target_idx == -1 or i_host == target_idx:
-            galaxy_catalog(sim_dirs[i_host], i_host, model_name)
+            galaxy_catalog(sim_dirs[i_host], i_host, model_names)
 
 if __name__ == "__main__": main()

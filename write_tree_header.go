@@ -139,7 +139,7 @@ func CalcTracks(h *Haloes, centralID int32, maxSnap int32) *Tracks {
 	t := &Tracks{ }
 
 	t.Starts, t.Ends = StartsEnds(h)
-
+	   
 	t.N = len(t.Starts)
 	t.MWIdx = FindCentral(h, t, centralID)
 	t.IsReal = IsReal(h, t)

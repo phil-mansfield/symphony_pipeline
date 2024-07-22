@@ -16,12 +16,6 @@ mp = param["mp"]/param["h100"]
 cosmo = cosmology.setCosmology('', symlib.colossus_parameters(param))
 base_dir = "/sdf/home/p/phil1/ZoomIns"
 
-#Ti = mass_so.dynamicalTime(zi, "vir", "crossing")
-#Mf, _, _ = mass_defs.pseudoEvolve(Mi, ci, "vir", zi, zf)
-#print(Mf/Mi)
-#def valid_pairs(scale, h, infall_snap, min_mass=0.0):
-#    pass
-
 def running_mpeak(m):
     out = np.zeros(m.shape)
     for i in range(1, len(m)):
