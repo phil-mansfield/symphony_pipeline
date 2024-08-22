@@ -4,9 +4,8 @@ import numpy as np
 import os.path as path
 import os
 
-um_dir = "/sdf/home/p/phil1/code/src/bitbucket.org/pbehroozi/universemachine"
-
-print_sm_catalog = path.join(um_dir, "print_sm_catalog")
+UM_SRC_DIR = "/sdf/home/p/phil1/code/src/bitbucket.org/pbehroozi/universemachine"
+print_sm_catalog = path.join(UM_SRC_DIR, "print_sm_catalog")
 
 def sf_fmt_to_bin_fmt(sf_fmt):
     return sf_fmt[:-4] + ".bin", sf_fmt[:-4] + ".bin.txt"
@@ -42,6 +41,14 @@ def get_base_str(path):
 
 def main():
     cfg_name, idx = sys.argv[1], sys.argv[2]
+    manual_um_dir = len(sys.argv) >=4
+    if manual_um_dir:
+        um_dir = sys.argv[3]
+        sf_fmt = sys.argv[4]
+        if idx == -1:
+            print("Can only loop over all hosts in a suite if manual um_dir and sf_fmt varaibles aren't ben set.")
+            exit(1)
+        
     idx = int(idx)
     sim_dirs, sf_fmts = np.loadtxt(cfg_name, dtype=str, usecols=(7,9)).T
     
@@ -54,7 +61,9 @@ def main():
     for i_host in range(n_host):
         if i_host != idx and idx != -1: continue
         print("%d/%d" % (i_host+1, n_host))
-        sim_dir, sf_fmt = sim_dirs[i_host], sf_fmts[i_host]
+        sim_dir = sim_dirs[i_host]
+        if not manual_um_dir:
+            sf_fmt = sf_fmts[i_host]
         sf_bin_fmt, sf_bin_txt_fmt = sf_fmt_to_bin_fmt(sf_fmt)
 
         a = symlib.scale_factors(sim_dir)
@@ -64,9 +73,11 @@ def main():
                  sorted(os.listdir(path.dirname(sf_fmt))) if
                  "sfr_catalog" in name and name[-4:] == ".bin"]
 
-        um_dir = path.join(sim_dir, "um")
+        if not manual_um_dir:
+            um_dir = path.join(sim_dir, "um")
         if not path.exists(um_dir):
-            os.system("mkdir %s" % um_dir)
+            print("CMD: mkdir -p %s" % um_dir)
+            os.system("mkdir -p %s" % um_dir)
         um_cfg_file = path.join(um_dir, "um.cfg")
 
         with open(um_cfg_file, "w+") as fp:
@@ -77,9 +88,10 @@ def main():
         out_names = [path.join(um_dir, "um_%d.txt" % i) for i in
                      range(len(a))]
         for i in range(len(a)):
+            print("CMD: %s %s %s > %s" % (print_sm_catalog, names[i],
+                                          um_cfg_file, out_names[i]))
             os.system("%s %s %s > %s" % (print_sm_catalog, names[i],
                                          um_cfg_file, out_names[i]))
-
                 
 
 if __name__ == "__main__": main()

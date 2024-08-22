@@ -4,8 +4,11 @@ import sys
 import os.path as path
 import convert_core_catalogue
     
-def write_um(sim_dir, um):
-    fname = path.join(sim_dir, "um", "um.dat")
+def write_um(sim_dir, um, um_dir=None):
+    if um_dir is None:
+        fname = path.join(sim_dir, "um", "um.dat")
+    else:
+        fname = path.join(um_dir, "um.dat")
     n_snap, n_halo = um.shape
     n = n_snap*n_halo
 
@@ -35,7 +38,7 @@ def get_target_ids(h, snap, first_snap, next_id, is_err):
     out[use_symlib_id] = h["id"][use_symlib_id,snap]
     return out
 
-def get_um_data(sim_dir):
+def get_um_data(sim_dir, um_dir):
     if sim_dir[-1] == "/": sim_dir = sim_dir[:-1]
 
     base_dir,suite_name,halo_name=convert_core_catalogue.parse_sim_dir(sim_dir)
@@ -54,7 +57,11 @@ def get_um_data(sim_dir):
     print(halo_name)
     for snap in range(len(a)):
         print("   ", snap)
-        um_txt_name = path.join(sim_dir, "um", "um_%d.txt" % snap)
+        if um_dir is None:
+            um_txt_name = path.join(sim_dir, "um", "um_%d.txt" % snap)
+        else:
+            um_txt_name = path.join(um_dir, "um_%d.txt" % snap)
+            
         id, desc_id = np.loadtxt(um_txt_name, usecols=(0,1), dtype=np.int64).T
         x, y, z, vx, vy, vz, mvir, vmax, rank, mstar, micl, sfr = np.loadtxt(
             um_txt_name, usecols=(5, 6, 7, 8, 9, 10, 11, 12, 16, 20, 21, 22)
@@ -70,8 +77,6 @@ def get_um_data(sim_dir):
         already_used = np.zeros(len(id), dtype=bool)
         
         target_ids = get_target_ids(h, snap, first_snap, next_id, is_err)
-        print("target_ids")
-        print(target_ids)
         idx = np.ones(len(target_ids), dtype=np.int64)*-1
         for i_sub in range(len(h)):
             if target_ids[i_sub] == -1: continue
@@ -79,7 +84,6 @@ def get_um_data(sim_dir):
             if id[idx[i_sub]] != target_ids[i_sub]:
                 idx[i_sub] = -1
                 is_err[i_sub] = True
-                #print("        Error at sub %d, snap %d" % (i_sub, snap))
             elif already_used[idx[i_sub]]:
                 idx[i_sub] = -1
                 is_err[i_sub] = False
@@ -113,15 +117,26 @@ def get_um_data(sim_dir):
 def main():
     config_name, idx_str = sys.argv[1], sys.argv[2]
     target_idx = int(idx_str)
+    if len(sys.argv) >= 3:
+        um_dir = sys.argv[3]
+        if target_idx == -1:
+            print("cannot loop over all halos when specifying a manual um directory.")
+            exit(1)
+    else:
+        um_dir = None
 
     sim_dirs = convert_core_catalogue.get_sim_dirs(config_name)
     n_host = len(sim_dirs)
     
     for i_host in range(n_host):
         if target_idx == -1 or i_host == target_idx:
-            um = get_um_data(sim_dirs[i_host])
-            write_um(sim_dirs[i_host], um)
+            um = get_um_data(sim_dirs[i_host], um_dir)
+            write_um(sim_dirs[i_host], um, um_dir)
 
-            um = symlib.read_um(sim_dirs[i_host])
+            if um_dir is not None:
+                um = symlib.read_um(sim_dirs[i_host], path.join(um_dir, "um.dat"))
+            else:
+                um = symlib.read_um(sim_dirs[i_host])             
+                
 
 if __name__ == "__main__": main()
