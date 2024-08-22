@@ -94,7 +94,6 @@ def get_um_data(sim_dir, um_dir):
                 next_id[i_sub] = -1
 
         ok = idx > 0
-        print(np.sum(ok & h["ok"][:,snap]), np.sum((~ok) & h["ok"][:,snap]))
         um["m_star"][ok,snap] = mstar[idx[ok]]
         um["m_icl"][ok,snap] = micl[idx[ok]]
         um["sfr"][ok,snap] = sfr[idx[ok]]
