@@ -60,17 +60,12 @@ def write_includes(sim_dir):
         symlib.write_include_variable(sim_dir, snap, "m_enc", m_enc)
             
 def main():
-    config_name, idx_str = sys.argv[1], sys.argv[2]
+    base_dir, suite, idx_str = sys.argv[1],  sys.argv[2], sys.argv[3]
     target_idx = int(idx_str)
 
-    sim_dirs = find_infall_cores.get_sim_dirs(config_name)
-
-    for host_i in range(len(sim_dirs)):
+    for host_i in range(symlib.n_hosts(suite)):
         if host_i != target_idx and target_idx != -1: continue
-        print(sim_dirs[host_i])
-        sim_dir = sim_dirs[host_i]
-        if sim_dir[-1] == "/": sim_dir = sim_dir[:-1]
-
+        sim_dir = symlib.get_host_directory(base_dir, suite, host_i)
         write_includes(sim_dir)
         
 if __name__ == "__main__": main()
