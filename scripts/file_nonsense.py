@@ -28,9 +28,9 @@ import numpy as np
 import glob
 import tarfile
 
-cd_dir = "/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns"
+cd_dir = "/fs/ddn/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns"
 base_dir = "."
-tar_dir = "/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns/tar_files"
+tar_dir = "/fs/ddn/sdf/group/kipac/g/cosmo/ki21/phil1/simulations/ZoomIns/tar_files"
 
 if cd_dir != os.getcwd():
     print("Need to run file_nonsense.py from %s" % cd_dir)
@@ -116,9 +116,15 @@ def tar_directory(suite, halo, dir_name):
                                   "snap_scale.dat",
                                   "tree_header.dat"]
                 else:
-                    file_names = ["infall_cores.dat", "subhalos.dat",
-                                  "cores_fid3.dat", "snap_scale.dat",
-                                  "tree_header.dat"]
+                    if path.exists(path.join(data_dir, "cores_fid4.dat")):
+                        file_names = ["infall_cores.dat", "subhalos.dat",
+                                      "cores_fid4.dat", "snap_scale.dat",
+                                      "tree_header.dat"]
+                    else:
+                        file_names = ["infall_cores.dat", "subhalos.dat",
+                                      "cores_fid3.dat", "snap_scale.dat",
+                                      "tree_header.dat"]
+                        
                 files = [path.join(data_dir, file_name) for 
                          file_name in file_names]
                 for file_name in files: f.add(file_name)

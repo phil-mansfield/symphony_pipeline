@@ -12,15 +12,6 @@
 date
 
 config=configs/MilkyWay/config.txt
-python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} um &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.005 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.008 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.015 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.025 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.05 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.1 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.2 &&
-    python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} r=0.4 &&
-
+python3 galaxy_properties.py ${config} ${SLURM_ARRAY_TASK_ID} um um_fit r=0.005 r=0.008 r=0.015 r=0.025 r=0.05 r=0.1 r=0.2 r=0.4
 
 date

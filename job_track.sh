@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#SBATCH --array=0-48
+#SBATCH --array=0-53
 #SBATCH --time=72:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=28G
 #SBATCH -J MWest_track
-#SBATCH --output=logs/MilkyWay/log.track.Group_8K_%A_%a.oe
+#SBATCH --output=logs/EDEN/log.track.EDEN_8K_%A_%a.oe
 #SBATCH --partition roma 
 #SBATCH --account kipac:kipac
 
-config=configs/Group/config.txt
+config=configs/EDEN_MilkyWay_8K/config.txt
 suffix=fid4
 snap_range=0:235
 

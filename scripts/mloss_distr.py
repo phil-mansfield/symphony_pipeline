@@ -9,8 +9,6 @@ palette.configure(True)
 def main():
     base_dir = "/sdf/home/p/phil1/ZoomIns"
     suite = "SymphonyMilkyWay"
-
-    n, npeak = [], []
     
     for i_host in range(symlib.n_hosts(suite)):
         sim_dir = symlib.get_host_directory(base_dir, suite, i_host)

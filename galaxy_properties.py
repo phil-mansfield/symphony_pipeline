@@ -10,7 +10,7 @@ import scipy.special as special
 
 def make_model(use_um, r_name):
     if r_name == "jiang":
-        radius_model = Jiang2019RHalf()
+        radius_model = symlib.Jiang2019RHalf()
     elif len(r_name) > 2 and r_name[:2] == "r=":
         radius_model = symlib.FixedRHalf(float(r_name[2:]))
     else:
@@ -44,7 +44,7 @@ def make_model(use_um, r_name):
 models = {
     "um": make_model(True, "jiang"),
     "um_fit": make_model(False, "jiang"),
-    "r=0.005": make_model(False, "r=0.005")
+    "r=0.005": make_model(False, "r=0.005"),
     "r=0.008": make_model(False, "r=0.008"),
     "r=0.015": make_model(False, "r=0.015"),
     "r=0.025": make_model(False, "r=0.025"),
@@ -61,7 +61,9 @@ def v_disp(v, mp):
     sigma_sq_3d = 0.0
     for dim in range(3):
         sigma_sq_3d += np.sum(v[:,dim]**2*mp)
-    sigma_sq_3d /= (3*np.sum(mp))
+    m_tot = np.sum(mp)
+    if np.sum(mp) <= 0: m_tot = 0 # Doesn't matter, it'll be nonsense anyway
+    sigma_sq_3d /= 3*m_tot
     
     return np.sqrt(sigma_sq_3d)
 
@@ -72,7 +74,6 @@ def capped_rel_max(x, x_min, debug=False):
     else:
         return np.max(x[i[1:]])
 
-
 def vmax(x, mp, eps):
     if len(x) == 0: return 0, 0
     r = np.sqrt(np.sum(x**2, axis=1))
@@ -80,7 +81,9 @@ def vmax(x, mp, eps):
     r = r[order]
 
     m = np.cumsum(mp*np.ones(len(r)))
-    v = 2.074e-3 * m**0.5 * (r**2 + eps**2)**-0.25
+    # Some shenanigans are needed to prevent putting Vmax at the
+    # first or second particles.
+    v = 2.074e-3 * m**0.5 * (r**2 + eps**2)**-0.25 
     vmax_min = 2.074e-3 * mp**0.5 * eps**-0.5
     vmax = capped_rel_max(v, vmax_min)
 
@@ -124,8 +127,7 @@ def get_m23_v_conv_lim(npeak):
     return 10**(x*x*b2 + x*b1 + b0)
     
 def galaxy_catalog(sim_dir, i_host, model_names):
-
-    n_model
+    n_model = len(model_names)
 
     gal_dir = os.path.join(sim_dir, "galaxies")
     if not os.path.exists(gal_dir):
@@ -140,20 +142,29 @@ def galaxy_catalog(sim_dir, i_host, model_names):
     part = symlib.Particles(sim_dir)
     sf, hist = symlib.read_symfind(sim_dir)
 
-    print("Starting to tag")
-    mp_star, _, m_star_i, r_half_i, _ = symlib.tag_stars(
-        sim_dir, models[model_name])
+    stars = [None]*n_model
+    gal_hist = [None]*n_model
+    state = None
+    
+    for im in range(n_model):
+        print("Tagging model %d, %s" % (im, model_names[im]))
+        if im == 0:
+            stars[im], gal_hist[im], tags = symlib.tag_stars(
+                sim_dir, models[model_names[im]])
+        else:
+            stars[im], gal_hist[im], state = symlib.retag_stars(
+                sim_dir, models[model_names[im]], tags, state=state)
+            
     print("Tagging done")
 
-    r_half_i *= (1/0.5**(2/3) - 1)**-0.5
-    r_half_i[0] = 0
+    r_half = np.zeros((n_model,) + sf.shape, dtype=np.float32)
+    m_star = np.zeros((n_model,) + sf.shape, dtype=np.float32)
+    x0_star = np.zeros((n_model,) + sf.shape + (3,), dtype=np.float32)
+    v0_star = np.zeros((n_model,) + sf.shape + (3,), dtype=np.float32)
+    m_dyn = np.zeros((n_model,) + sf.shape, dtype=np.float32)
+    v_disp_3d_star = np.zeros((n_model,) + sf.shape, dtype=np.float32)
 
-    r_half = np.zeros(sf.shape, dtype=np.float32)
-    m_star = np.zeros(sf.shape, dtype=np.float32)
-    x0_star = np.zeros(sf.shape + (3,), dtype=np.float32)
-    v0_star = np.zeros(sf.shape + (3,), dtype=np.float32)
-    m_dyn = np.zeros(sf.shape, dtype=np.float32)
-    v_disp_3d_star = np.zeros(sf.shape, dtype=np.float32)
+    # DM properties, same for every star model.
     v_disp_3d_dm = np.zeros(sf.shape, dtype=np.float32)
     vmax_dm = np.zeros(sf.shape, dtype=np.float32)
     vmax_dm_debias = np.zeros(sf.shape, dtype=np.float32)
@@ -161,12 +172,21 @@ def galaxy_catalog(sim_dir, i_host, model_names):
     m23_m_conv = np.zeros(sf.shape, dtype=bool)
     m23_v_conv = np.zeros(sf.shape, dtype=bool)
 
-    m_star_i = np.asarray(m_star_i, dtype=np.float32)
-    r_half_i = np.asarray(r_half_i, dtype=np.float32)    
+    # infall properties
+    m_star_i = np.zeros((n_model, len(sf)))
+    r_half_i = np.zeros((n_model, len(sf)))
+
+    for im in range(n_model):
+        m_star_i[im] = np.asarray(gal_hist[im]["m_star_i"],
+                                  dtype=np.float32)
+        r_half_i[im] = np.asarray(gal_hist[im]["r_half_3d_i"],
+                                  dtype=np.float32)    
 
     for snap in range(len(scale)):
-        if np.sum(sf["ok"][1:,snap]) == 0: continue
-        if snap % 10 == 0: print("   ", snap)
+        if np.sum(sf["ok"][1:,snap]) == 0:
+            continue
+        if snap % 10 == 0:
+            print("   ", snap)
 
         p = part.read(snap, mode="all")
 
@@ -194,64 +214,69 @@ def galaxy_catalog(sim_dir, i_host, model_names):
                                          n_iter=4)
             is_bound[idx] = E < 0
 
-            mp_star_i = mp_star[i][is_bound[smooth]]
-            x_star = x[is_bound & smooth]
-            v_star = v[is_bound & smooth]
-            v_star_w, x_star_w = np.copy(v_star), np.copy(x_star)
-            for dim in range(3):
-                x_star_w[:,dim] *= mp_star_i
-                v_star_w[:,dim] *= mp_star_i
+            for im in range(n_model):
+                mp_star_i = stars[im][i]["mp"][is_bound[smooth]]
+                x_star = x[is_bound & smooth]
+                v_star = v[is_bound & smooth]
+                v_star_w, x_star_w = np.copy(v_star), np.copy(x_star)
+                for dim in range(3):
+                    x_star_w[:,dim] *= mp_star_i
+                    v_star_w[:,dim] *= mp_star_i
 
-            if np.sum(mp_star_i) > 0:
-                x0_star[i,snap] = np.sum(x_star_w, axis=0)/np.sum(mp_star_i)
-                v0_star[i,snap] = np.sum(v_star_w, axis=0)/np.sum(mp_star_i)
+                if np.sum(mp_star_i) > 0:
+                    x0_star[im,i,snap] = np.sum(x_star_w, axis=0)
+                    x0_star[im,i,snap] /= np.sum(mp_star_i)
+                    v0_star[im,i,snap] = np.sum(v_star_w, axis=0)
+                    v0_star[im,i,snap] /= np.sum(mp_star_i)
 
-            r = np.sqrt(np.sum((x - x0_star[i,snap])**2, axis=1))
-            r = r[is_bound & smooth]
-            order = np.argsort(r)
-            r = r[order]
-            mp_star_i = mp_star_i[order]
+                r = np.sqrt(np.sum((x - x0_star[im,i,snap])**2, axis=1))
+                r = r[is_bound & smooth]
+                order = np.argsort(r)
+                r = r[order]
+                mp_star_i = mp_star_i[order]
 
-            x_all = x_all - x0_star[i,snap]
-            r_all = np.sum(x_all**2, axis=1)
+                x_all = x_all - x0_star[im,i,snap]
+                r_all = np.sum(x_all**2, axis=1)
+            
+                m_star[im,i,snap] = np.sum(mp_star_i)
+                c_mass = np.cumsum(mp_star_i)
+                if len(c_mass) != 0:
+                    r_half[im,i,snap] = r[np.searchsorted(c_mass,c_mass[-1]/2)]
+                    m_dyn[im,i,snap] = np.sum(r_all < r_half[im,i,snap])*mp
 
-            m_star[i,snap] = np.sum(mp_star_i)
-            c_mass = np.cumsum(mp_star_i)
-            if len(c_mass) != 0:
-                r_half[i,snap] = r[np.searchsorted(c_mass, c_mass[-1]/2)]
-                m_dyn[i,snap] = np.sum(r_all < r_half[i,snap])*mp
-
-            x0_star[i,snap] += sf["x"][i,snap]
-            v0_star[i,snap] += sf["v"][i,snap]
-
+                x0_star[im,i,snap] += sf["x"][i,snap]
+                v0_star[im,i,snap] += sf["v"][i,snap]
+                v_disp_3d_star[im,i,snap] = v_disp(v_star, mp_star_i)
+                
+            # dm property calculations
             v_disp_3d_dm[i,snap] = v_disp(v[is_bound], mp)
-            v_disp_3d_star[i,snap] = v_disp(v_star, mp_star_i)
             vmax_dm[i,snap], vmax_dm_debias[i,snap] = vmax(
-                x[is_bound], mp, eps[snap])        
+                    x[is_bound], mp, eps[snap])
 
-
-    file_name = os.path.join(gal_dir, "%s.dat" % model_name)
-    n_snap, n_halo = sf.shape
-    with open(file_name, "w+") as fp:
-        m_star_i.tofile(fp)
-        r_half_i.tofile(fp)
-        m_star.tofile(fp)
-        r_half.tofile(fp)
-        m_dyn.tofile(fp)
-        x0_star.tofile(fp)
-        v0_star.tofile(fp)
-        v_disp_3d_dm.tofile(fp)
-        v_disp_3d_star.tofile(fp)
-        vmax_dm.tofile(fp)
-        vmax_dm_debias.tofile(fp)
-        m23_weight.tofile(fp)
-        m23_m_conv.tofile(fp)
-        m23_v_conv.tofile(fp)
-        sf["ok"].tofile(fp)
+    for im in range(n_model):
+        file_name = os.path.join(gal_dir, "gal_cat_%s.dat" % model_names[im])
+        print("file_name", file_name)
+        n_snap, n_halo = sf.shape
+        with open(file_name, "w+") as fp:
+            m_star_i[im].tofile(fp)
+            r_half_i[im].tofile(fp)
+            m_star[im].tofile(fp)
+            r_half[im].tofile(fp)
+            m_dyn[im].tofile(fp)
+            x0_star[im].tofile(fp)
+            v0_star[im].tofile(fp)
+            v_disp_3d_dm.tofile(fp) # dm property
+            v_disp_3d_star[im].tofile(fp)
+            vmax_dm.tofile(fp) # dm property
+            vmax_dm_debias.tofile(fp) # dm property
+            m23_weight.tofile(fp) # dm property
+            m23_m_conv.tofile(fp) # dm property
+            m23_v_conv.tofile(fp) # dm property
+            sf["ok"].tofile(fp) # dm property
 
 def main():
     config_name, idx_str, model_names = sys.argv[1], sys.argv[2], sys.argv[3:]
-    print("Running models %s on config %s, galaxy %d" %
+    print("Running models %s on config %s, galaxy %s" %
           (model_names, config_name, idx_str))
     target_idx = int(idx_str)
 

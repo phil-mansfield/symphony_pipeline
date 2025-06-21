@@ -147,8 +147,9 @@ def is_slow_grower(h, hist, t, t_dyn, mp):
 
 def expansion_examples():
     out_dir = "../plots/stellar_halo/numerics/examples"
-    suite = "SymphonyGroup"
-    i_host = 2
+    #suite = "SymphonyGroup"
+    suite = "TestSIDM"
+    i_host = 0
 
     param = symlib.simulation_parameters(suite)
     cosmo = cosmology.setCosmology('', symlib.colossus_parameters(param))
@@ -259,7 +260,7 @@ def expansion_examples():
     plt.xlabel(r"$\Delta t/T_{relax}$")
     plt.ylabel(r"$r_{50}/r_{\rm 50}(t_{\rm tag})$")
 
-    plt.savefig("%s/expansion.png" % (out_dir,))
+    plt.savefig("%s/expansion_%s.png" % (out_dir, suite))
 
 def main():
     #compare_pseudo_evolve()

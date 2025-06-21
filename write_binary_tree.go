@@ -84,7 +84,7 @@ func main() {
 
 		log.Printf("Converting halo %d (%s)", i, cfg.BaseDir[i])
 		lib.MemoryUsage()
-		
+		fmt.Printf("dir: %s\n", cfg.BaseDir[i])
 		lib.MaybeMkdir(lib.HaloDirName(cfg.BaseDir[i]))
 		ConvertTree(cfg.TreeDir[i], cfg.BaseDir[i], cfg, i)
 	}

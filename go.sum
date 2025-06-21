@@ -23,6 +23,8 @@ github.com/phil-mansfield/gravitree v1.0.1 h1:LE0p63lCKxxaIM3IhG+G4isNUxFjMgTwvw
 github.com/phil-mansfield/gravitree v1.0.1/go.mod h1:YK1w+rBRlt1ByfgWNvBwyHHSsDohsglfqJlgKGG8m+M=
 github.com/phil-mansfield/guppy v0.0.0-20211105040419-780694eed55f h1:KUM+qyDxd4RcjPC93/PDIQg1MV8WQO383LH2Vv6Fn10=
 github.com/phil-mansfield/guppy v0.0.0-20211105040419-780694eed55f/go.mod h1:UDm2G2Bzx8ikvos+/UZbAnf0tnQPfOshpa/9OU3earU=
+github.com/phil-mansfield/table v1.0.1 h1:iumN+nPNBjd5RmLQR996JHOKD0c1UN0t67X1TD26ngg=
+github.com/phil-mansfield/table v1.0.1/go.mod h1:yMPvKaLKI+gjI++628Qzo7pHpWP+C63QGJAzXHLjqB4=
 github.com/phpdave11/gofpdf v1.4.2/go.mod h1:zpO6xFn9yxo3YLyMvW8HcKWVdbNqgIfOOp2dXMnm1mY=
 github.com/phpdave11/gofpdi v1.0.12/go.mod h1:vBmVV0Do6hSBHC8uKUQ71JGW+ZGQq74llk/7bXwjDoI=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
