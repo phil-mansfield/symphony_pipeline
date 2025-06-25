@@ -51,7 +51,7 @@ def write_includes(sim_dir):
             
             if i != 0 and np.sum(E_sph[i] < 0) > 1:
                 t = gravitree.Tree(dx, eps[snap], mp, gravitree.G_COSMO)
-                E[i] = gravitree.unbind(t, dv) + ke
+                E[i] = gravitree.unbind(t, dv)
             else:
                 E[i] = np.zeros(len(p[i]))
 
