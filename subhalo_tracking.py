@@ -291,8 +291,11 @@ class MassProfile(object):
             n_tidal = np.sum(ok)
             if bound_only:
                 is_bound = np.zeros(len(ok), dtype=bool)
-                is_bound_ok = gravitree.binding_energy(
-                    dx[ok], dv[ok], mp, eps, n_iter=2) < 0
+                
+                G = gravitree.G_COSMO
+                tree = gravitree.Tree(dx[ok], eps, mp, G)
+                is_bound_ok = gravitree.unbind(tree, dv[ok]) < 0
+
                 is_bound[ok] = is_bound_ok
             else:
                 is_bound = ok

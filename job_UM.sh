@@ -11,6 +11,9 @@
 
 #python3 write_um_file.py configs/SymphonyMilkyWay/config.txt ${SLURM_ARRAY_TASK_ID} &&
 #    echo "done"
-python3 print_UM.py configs/Cluster/config.txt ${SLURM_ARRAY_TASK_ID} &&
-   python3 write_um_file.py configs/Cluster/config.txt ${SLURM_ARRAY_TASK_ID} &&
+
+
+SLURM_ARRAY_TASK_ID=32
+#python3 print_UM.py configs/Cluster/config.txt ${SLURM_ARRAY_TASK_ID} &&
+   python3 write_um_file.py configs/LCluster/config.txt ${SLURM_ARRAY_TASK_ID} &&
    echo "done"

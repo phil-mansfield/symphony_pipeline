@@ -116,7 +116,7 @@ def get_um_data(sim_dir, um_dir):
 def main():
     config_name, idx_str = sys.argv[1], sys.argv[2]
     target_idx = int(idx_str)
-    if len(sys.argv) >= 3:
+    if len(sys.argv) > 3:
         um_dir = sys.argv[3]
         if target_idx == -1:
             print("cannot loop over all halos when specifying a manual um directory.")

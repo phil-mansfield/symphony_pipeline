@@ -202,8 +202,10 @@ def print_halo(config_name, target_idx, flags):
                 r_tidal, m_tidal = prof.tidal_radius(
                     xc, xp[valid], vc, vp[valid], bound_only=True)
 
-            is_bound = gravitree.binding_energy(
-                dxp[valid], dvp[valid], sd.mp, sd.eps, n_iter=10) < 0
+
+            G = gravitree.G_COSMO
+            tree = gravitree.Tree(dxp[valid], sd.eps, sd.mp, G)
+            is_bound = gravitree.unbind(tree, dvp[valid]) < 0
             
             m_bound = np.sum(is_bound)*sd.mp
             
@@ -220,8 +222,7 @@ def print_halo(config_name, target_idx, flags):
             dxh = dxp + xc - h[i_sub,snap]["x"]
             if h["ok"][i_sub,snap]:
                 dvh = dvp + vc - h[i_sub,snap]["v"]
-                is_bound_h = gravitree.binding_energy(
-                    dxh[valid], dvh[valid], sd.mp, sd.eps, n_iter=10) < 0
+                is_bound_h = gravitree.unbind(tree, dvh[valid]) < 0
                 rh = np.sqrt(np.sum(dxh[valid]**2, axis=1))
                 if np.sum(is_bound_h) > 2:
                     r_50_bound_h = np.quantile(rh[is_bound_h], 0.5)
